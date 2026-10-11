@@ -104,7 +104,16 @@ document.querySelectorAll(".tbtn").forEach((btn) => {
   btn.addEventListener("pointercancel", r);
   btn.addEventListener("pointerleave", r);
 });
-const touchEnabled = window.matchMedia("(hover:none) and (pointer:coarse)").matches;
+/* Detecção robusta de toque. O teste antigo [(hover:none) and (pointer:coarse)]
+   FALHAVA em Samsung com caneta (S-Pen): esses aparelhos reportam pointer:fine /
+   hover:hover por causa da caneta, então os controles de toque (◀ ▶ ⬆) nunca
+   apareciam e o boneco não andava. Agora checamos se EXISTE qualquer toque. */
+const touchEnabled =
+  ("ontouchstart" in window) ||
+  ((navigator.maxTouchPoints | 0) > 0) ||
+  (!!window.matchMedia && (
+     window.matchMedia("(any-pointer: coarse)").matches ||
+     window.matchMedia("(pointer: coarse)").matches));
 const WORLD_ZOOM = touchEnabled ? 1.5 : 1;   // no celular, aproxima a câmera (Lula maior)
 
 /* ----------------------------- Áudio / Música --------------------------- */

@@ -112,7 +112,7 @@ body{
 #fact-banner .fb-close{display:none;}
 .mobile-tip{display:none;}  /* dica de tela cheia: só no celular */
 /* No celular: mensagens compactas, ABAIXO do HUD (não cobrem o placar), e com "fechar" */
-@media (hover:none) and (pointer:coarse){
+@media (any-pointer: coarse){
   #hud{padding:5px 8px;gap:5px;}
   .hud-item{padding:3px 8px;font-size:clamp(11px,2vw,15px);}
   #fact-banner{top:54px;max-width:82%;padding:8px 13px;font-size:14px;line-height:1.3;border-radius:12px;}
@@ -303,7 +303,7 @@ h2{
 
 /* ---------------- Aviso girar o celular ---------------- */
 #rotate-hint{display:none;}
-@media (hover:none) and (pointer:coarse) and (orientation:portrait){
+@media (any-pointer: coarse) and (orientation:portrait){
   #rotate-hint{
     display:flex;position:fixed;inset:0;z-index:100;
     background:#15161a;color:#fff;align-items:center;justify-content:center;
@@ -332,7 +332,7 @@ h2{
 .tbtn-jump:active{background:rgba(225,16,33,.45);}
 
 /* ====== Compactação p/ celular — colocado NO FIM para vencer em especificidade ====== */
-@media (hover:none) and (pointer:coarse){
+@media (any-pointer: coarse){
   .menu-box,.feito-box,.intro-box{padding:12px 15px;border-width:3px;box-shadow:0 5px 0 var(--preto),0 10px 22px rgba(0,0,0,.5);}
   .logo{font-size:clamp(24px,6vw,40px);margin-bottom:5px;}
   .tagline{font-size:12px;margin-bottom:8px;}
@@ -353,7 +353,7 @@ h2{
 }
 
 /* ====== Mapa no celular: painel maior (leitura) + título/dica fora do painel ====== */
-@media (hover:none) and (pointer:coarse){
+@media (any-pointer: coarse){
   .painel{width:min(50%,322px);top:6px;left:6px;padding:9px 12px;border-radius:14px;}
   .pn-title{font-size:16px;margin-bottom:0;}
   .pn-sub{font-size:10.5px;margin-bottom:5px;}
@@ -374,7 +374,7 @@ h2{
 }
 
 /* ====== Tela "Baixe o app" no celular — fontes maiores p/ leitura (rola se precisar) ====== */
-@media (hover:none) and (pointer:coarse){
+@media (any-pointer: coarse){
   #start-help{padding:14px;align-items:flex-start;}
   .sh-card{padding:15px 16px 14px;max-width:460px;}
   .sh-ico{font-size:34px;margin-bottom:2px;}
