@@ -373,14 +373,16 @@ h2{
   body.boss-on #fact-banner{top:92px;}
 }
 
-/* ====== Tela "Baixe o app" no celular — fontes maiores p/ leitura (rola se precisar) ====== */
+/* ====== Tela "Baixe o app" no celular — cabe numa tela só, fonte legível ======
+   Card mais LARGO (a paisagem tem espaço de sobra) p/ cada passo caber em 1-2
+   linhas, e espaçamentos enxutos, para não cortar o botão nem rolar. */
 @media (any-pointer: coarse){
-  #start-help{padding:14px;align-items:flex-start;}
-  .sh-card{padding:15px 16px 14px;max-width:460px;}
-  .sh-ico{font-size:34px;margin-bottom:2px;}
-  .sh-card h2{font-size:22px;margin-bottom:6px;}
-  .sh-lead{font-size:15.5px;margin-bottom:10px;line-height:1.4;}
-  .sh-steps{font-size:15.5px;gap:8px;margin-bottom:11px;max-width:100%;line-height:1.5;}
-  .sh-note{font-size:13px;margin-bottom:11px;line-height:1.4;}
-  #start-help .big-btn{padding:12px 16px;font-size:18px;}
+  #start-help{padding:10px;align-items:flex-start;}
+  .sh-card{padding:11px 20px 12px;max-width:600px;}
+  .sh-ico{font-size:27px;margin-bottom:0;}
+  .sh-card h2{font-size:20px;margin-bottom:4px;}
+  .sh-lead{font-size:15px;margin-bottom:7px;line-height:1.32;}
+  .sh-steps{font-size:15px;gap:5px;margin-bottom:8px;max-width:100%;line-height:1.38;}
+  .sh-note{font-size:12.5px;margin-bottom:8px;line-height:1.32;}
+  #start-help .big-btn{padding:10px 16px;font-size:17px;}
 }

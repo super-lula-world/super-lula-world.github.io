@@ -1,10 +1,10 @@
 /* Service worker do Super Lula World.
    Estratégia "network-first": online sempre pega a versão mais nova (evita
    ficar preso em cache antigo); offline cai no cache. */
-const CACHE = "slw-v34";
+const CACHE = "slw-v35";
 const ASSETS = [
   "./", "./index.html",
-  "./css/style.css?v=34", "./js/levels.js?v=34", "./js/game.js?v=34",
+  "./css/style.css?v=35", "./js/levels.js?v=35", "./js/game.js?v=35",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"
 ];
 self.addEventListener("install", (e) => {
