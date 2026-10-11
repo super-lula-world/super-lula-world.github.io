@@ -1386,13 +1386,18 @@ function handleMapClick(clientX, clientY){
  * ==========================================================================*/
 let last=0, acc=0; const STEP=1/60;
 function frame(t){
-  if(!last)last=t; let dt=(t-last)/1000; last=t; if(dt>0.25)dt=0.25; acc+=dt;
-  let guard=0;
-  while(acc>=STEP && guard<5){ if(scene===Scene.PLAY) update(); acc-=STEP; guard++; }
-  // atualiza boss-bar visível só em play c/ boss ativo
-  document.getElementById("boss-bar").classList.toggle("hidden", !(scene===Scene.PLAY && bossActive && boss && boss.alive));
-  render();
-  requestAnimationFrame(frame);
+  try{
+    if(!last)last=t; let dt=(t-last)/1000; last=t; if(dt>0.25)dt=0.25; acc+=dt;
+    let guard=0;
+    while(acc>=STEP && guard<5){ if(scene===Scene.PLAY) update(); acc-=STEP; guard++; }
+    // atualiza boss-bar visível só em play c/ boss ativo
+    document.getElementById("boss-bar").classList.toggle("hidden", !(scene===Scene.PLAY && bossActive && boss && boss.alive));
+    render();
+  }catch(err){
+    // não deixa um erro de um quadro congelar o jogo para sempre; mostra o motivo
+    if(window.__fatal) window.__fatal((err&&err.message?err.message:err)+(err&&err.stack?('\n'+String(err.stack).split('\n').slice(0,3).join('\n')):''));
+  }
+  requestAnimationFrame(frame);   // SEMPRE reagenda o próximo quadro
 }
 
 /* ----------------------------- Botões ----------------------------------- */

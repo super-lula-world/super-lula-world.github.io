@@ -3,6 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- Rede de segurança: se algo travar o jogo (ex.: navegador antigo da Samsung),
+     mostra uma tela com o erro em vez de ficar preto. Ajuda a diagnosticar. -->
+<script>
+(function(){
+  var shown=false;
+  function esc(s){return String(s).replace(/[<>&]/g,function(c){return c=='<'?'&lt;':c=='>'?'&gt;':'&amp;';});}
+  window.__fatal=function(msg){
+    if(shown)return; shown=true;
+    function paint(){
+      var d=document.getElementById('fatal-error');
+      if(!d){ d=document.createElement('div'); d.id='fatal-error'; (document.body||document.documentElement).appendChild(d); }
+      d.setAttribute('style','position:fixed;inset:0;z-index:99999;background:#0d0f14;color:#fff;'
+        +'font-family:system-ui,Arial,sans-serif;padding:20px;overflow:auto;-webkit-overflow-scrolling:touch;');
+      d.innerHTML='<div style="max-width:540px;margin:8vh auto 0;text-align:center">'
+        +'<div style="font-size:42px">🔧</div>'
+        +'<h2 style="color:#ffd12e;margin:10px 0 6px">Ops! Algo travou o jogo</h2>'
+        +'<p style="color:#cfd3db;line-height:1.5">Tira um <b>print desta tela</b> e manda pra gente — '
+        +'assim corrigimos rapidinho. 🙏</p>'
+        +'<p style="color:#cfd3db;line-height:1.5;margin-top:8px">Enquanto isso, tente abrir pelo '
+        +'<b>Google Chrome</b> atualizado.</p>'
+        +'<pre style="white-space:pre-wrap;text-align:left;background:#1b1e26;color:#ff9a9a;'
+        +'padding:12px;border-radius:10px;margin-top:14px;font-size:12px">'+esc(msg)+'</pre>'
+        +'<p style="color:#7a8a98;font-size:11px;margin-top:10px;word-break:break-word">'+esc(navigator.userAgent)+'</p>'
+        +'</div>';
+    }
+    if(document.body)paint(); else document.addEventListener('DOMContentLoaded',paint);
+  };
+  // só erros de JavaScript (sem captura => ignora falha de carregar imagem/script externo)
+  window.addEventListener('error',function(e){
+    if(e && e.message) window.__fatal(e.message+(e.filename?('\n'+e.filename+' : '+e.lineno):''));
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    var r=e&&e.reason; window.__fatal('Promise: '+((r&&r.message)?r.message:r));
+  });
+})();
+</script>
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <title>Super Lula World</title>
 <meta name="description" content="Super Lula World — jogo de plataforma didático e tributo às conquistas do povo brasileiro. Enfrente as forças do atraso e reconstrua o Brasil!">
@@ -17,7 +53,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=32">
+<link rel="stylesheet" href="css/style.css?v=33">
 </head>
 <body>
 <div id="game-shell">
@@ -211,8 +247,8 @@
 
 </div>
 
-<script src="js/levels.js?v=32"></script>
-<script src="js/game.js?v=32"></script>
+<script src="js/levels.js?v=33"></script>
+<script src="js/game.js?v=33"></script>
 <script>
   // registra o app (PWA) — permite "Adicionar à Tela de Início" e tela cheia
   if ("serviceWorker" in navigator) {

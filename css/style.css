@@ -28,7 +28,11 @@ body{
 #game-shell{
   position:relative;
   aspect-ratio:1280/704;
-  /* maior tamanho que cabe NA TELA mantendo a proporção (largura OU altura) */
+  /* maior tamanho que cabe NA TELA mantendo a proporção (largura OU altura).
+     A 1ª linha (vh) é fallback p/ navegadores antigos (ex.: Samsung Internet
+     sem suporte a dvh); a 2ª sobrescreve nos modernos. O JS (fitShell) também
+     define o tamanho em px, garantindo que caiba mesmo sem suporte a essas unidades. */
+  width:min(100vw, 100vh*1280/704, 1180px);
   width:min(100vw, 100dvh*1280/704, 1180px);
   background:#000;
   overflow:hidden;
