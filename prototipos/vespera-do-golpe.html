@@ -303,8 +303,10 @@
   ];
   for(let x=2;x<=7;x++) if(x!==5) defs.push({type:'fence',tx:x,ty:12,fw:1,fh:1,gen:genFence});
   for(let x=11;x<=16;x++) if(x!==14) defs.push({type:'fence',tx:x,ty:12,fw:1,fh:1,gen:genFence});
-  [[9,11],[18,11],[28,10],[36,12],[13,22],[20,21],[11,24],[25,24],[34,22]].forEach(([x,y])=>defs.push({type:'tree',tx:x,ty:y,fw:1,fh:1,gen:genTree}));
-  [[2,18],[8,18],[22,18],[33,18],[15,25],[19,25]].forEach(([x,y])=>defs.push({type:'bush',tx:x,ty:y,fw:1,fh:1,gen:genBush}));
+  const TREE_M=['tree_ipe','tree_mangueira','tree_bananeira'];
+  [[9,11],[18,11],[28,10],[36,12],[13,22],[20,21],[11,24],[25,24],[34,22]].forEach(([x,y],i)=>defs.push({type:'tree',tx:x,ty:y,fw:1,fh:1,model:TREE_M[i%3],gen:genTree}));
+  const BUSH_M=['bush_flor1','bush_flor2'];
+  [[2,18],[8,18],[22,18],[33,18],[15,25],[19,25]].forEach(([x,y],i)=>defs.push({type:'bush',tx:x,ty:y,fw:1,fh:1,model:BUSH_M[i%2],gen:genBush}));
   defs.forEach(d=>{ const e=add(d); d.gen(e); });
 
   // lampiões (com luz)
@@ -377,6 +379,14 @@
   const houseImg={}; const houseReady={};
   HOUSE_MODELS.forEach(m=>{ const img=new Image(); houseReady[m]=false;
     img.onload=()=>{ houseReady[m]=true; }; img.src=`../assets/objs/house_${m}.png`; houseImg[m]=img; });
+
+  // ---- SPRITES DE VEGETAÇÃO (PixelLab) ----
+  // Árvores (ipê, mangueira, bananeira) e arbustos com flores. Mesmo swap+fallback:
+  // sem o PNG, cai em genTree/genBush procedural. Sombra e y-sort ficam no loop de desenho.
+  const VEG_KEYS=['tree_ipe','tree_mangueira','tree_bananeira','bush_flor1','bush_flor2'];
+  const vegImg={}; const vegReady={};
+  VEG_KEYS.forEach(k=>{ const img=new Image(); vegReady[k]=false;
+    img.onload=()=>{ vegReady[k]=true; }; img.src=`../assets/objs/${k}.png`; vegImg[k]=img; });
 
   const SPD=1.2;
   function blocked(px,py){ const bx=px+3,by=py+16,bw=10,bh=4,c=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
@@ -505,6 +515,9 @@
           const him=houseImg[e.model], dw=e.fw*TS+8, dh=Math.round(him.height*dw/him.width);
           ctx.drawImage(him,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh);
           if(e.bar){ const by=(baseY-dh*0.5)|0; ctx.fillStyle=OL; ctx.fillRect((fcx-11)|0,by,22,9); ctx.fillStyle='#f0c04a'; ctx.font='7px monospace'; ctx.textAlign='center'; ctx.fillText('BAR',fcx,by+7); ctx.textAlign='left'; }
+        } else if((e.type==='tree'||e.type==='bush') && vegReady[e.model]){
+          const vim=vegImg[e.model], dw=(e.type==='tree'?48:26), dh=Math.round(vim.height*dw/vim.width);
+          ctx.drawImage(vim,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh);
         } else blit(e.spr,fcx,baseY);
         if(e.water){ const wob=Math.sin(time/300); ctx.fillStyle='#8fc0dc'; ctx.fillRect((fcx-6)|0,(baseY-e.spr.h+9+wob)|0,12,2); }
         if(e.type==='radio'){ const ph=(time/260|0)%3; ctx.strokeStyle='rgba(255,220,150,.85)'; ctx.lineWidth=1; const rx=e.tx*TS+9, ry=(e.ty+1)*TS-14; for(let i=0;i<3;i++){ if((ph+i)%3) continue; ctx.beginPath(); ctx.arc(rx,ry,3+i*3,-1.1,0.3); ctx.stroke(); } }
