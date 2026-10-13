@@ -325,8 +325,7 @@
     {type:'coreto',tx:29,ty:18,fw:3,fh:2, solid:true, gen:()=>{}},
     {type:'bench',tx:27,ty:18,fw:1,fh:1,gen:genBench},{type:'bench',tx:34,ty:18,fw:1,fh:1,gen:genBench},
     {type:'bench',tx:27,ty:22,fw:1,fh:1,gen:genBench},{type:'bench',tx:34,ty:22,fw:1,fh:1,gen:genBench},
-    // interações estruturais
-    {type:'radio',tx:3, ty:9, fw:1,fh:1,solid:false,gen:genRadio},
+    // interações estruturais (rádio foi pra dentro de casa)
     {type:'kiosk',tx:15,ty:11,fw:2,fh:1,gen:genKiosk},
   ];
   // MUROS + PORTÕES (só nas CASAS): sobrado NO (col3), casa NO (col12), casa SO (col12)
@@ -374,7 +373,7 @@
     jipe:{eyebrow:'NA RUA',title:'Um tanque do Exército',text:'Um tanque desce a rua devagar, a torre apontada pra frente, soldados observando as janelas. Ainda não dispararam nada. Mas todo mundo que vê sente a mesma coisa: isto é o começo de alguma coisa grande.'},
   };
   const order=['radio','banca','vizinhos','bar','jipe'];
-  const points={ radio:[3.5,9.5], banca:[16,11.5], vizinhos:[14,16.5], bar:[2.5,16.5] };
+  const points={ banca:[16,11.5], vizinhos:[14,16.5], bar:[2.5,16.5] };
   const found={}; order.forEach(k=>found[k]=false);
 
   const player={x:13*TS,y:12*TS,dir:'down',moving:false,animT:0,phase:0,blinkT:2000,closing:0,col:{kind:'civil',skin:'#e7b377',hair:'#2a1c12',shirt:'#9a3b2e',pants:'#334055',shoe:'#201a14'}};
@@ -487,9 +486,11 @@
   addEventListener('keyup',e=>{ if(kmap[e.key]) keys[kmap[e.key]]=false; });
   document.querySelectorAll('.dpad button').forEach(b=>{ const d=b.dataset.dir; if(!d)return; const on=e=>{e.preventDefault();keys[d]=true;}, off=e=>{e.preventDefault();keys[d]=false;}; b.addEventListener('touchstart',on,{passive:false}); b.addEventListener('touchend',off,{passive:false}); b.addEventListener('mousedown',on); b.addEventListener('mouseup',off); b.addEventListener('mouseleave',off); });
   document.getElementById('btnAct').addEventListener('click',act);
-  function near(){ const pcx=player.x/TS+0.5, pcy=player.y/TS+1; for(const k of ['radio','banca','vizinhos','bar']){ const[tx,ty]=points[k]; if(Math.hypot(pcx-tx,pcy-ty)<1.7) return k; } if(Math.hypot((player.x+8)-(jeep.x+jeep.w/2),(player.y+8)-(jeep.y+8))<34) return 'jipe'; return null; }
+  function near(){ const pcx=player.x/TS+0.5, pcy=player.y/TS+1; for(const k of ['banca','vizinhos','bar']){ const[tx,ty]=points[k]; if(Math.hypot(pcx-tx,pcy-ty)<1.7) return k; } if(Math.hypot((player.x+8)-(jeep.x+jeep.w/2),(player.y+8)-(jeep.y+8))<34) return 'jipe'; return null; }
   const dialog=document.getElementById('dialog');
-  function act(){ if(paused){ if(dialog.classList.contains('show')) closeD(); return; } if(scene!=='cidade') return; const k=near(); if(k) openD(k); }
+  function act(){ if(paused){ if(dialog.classList.contains('show')) closeD(); return; }
+    if(scene==='casa'){ if(Math.hypot((player.x+8)-4*TS,(player.y+8)-11*TS)<34) openD('radio'); return; } // rádio valvulado da sala
+    if(scene!=='cidade') return; const k=near(); if(k) openD(k); }
   function openD(k){ const i=INFO[k]; document.getElementById('dlg-eyebrow').textContent=i.eyebrow; document.getElementById('dlg-title').textContent=i.title; document.getElementById('dlg-text').textContent=i.text; dialog.classList.add('show'); paused=true; dialog._k=k; }
   function closeD(){ const k=dialog._k; dialog.classList.remove('show'); paused=false; if(k&&!found[k]){ found[k]=true; hud(); if(order.every(x=>found[x])) finish(); } }
   document.getElementById('dlg-close').addEventListener('click',closeD);
@@ -592,13 +593,13 @@
   // Móveis encostados: {k, w:'top'|'bottom'|'left'|'right', a:<posição ao longo da parede, px>}.
   // Soltos (só mesa, mesinha, tapete): {k, cx, by, free:true}.
   const casaFurn=[
-    // COZINHA (parede de cima, cols 3–13) — tudo dentro do azulejo
-    {k:'geladeira', w:'top', a:4.0*TS}, {k:'fogao', w:'top', a:6.0*TS}, {k:'botijao', w:'top', a:7.6*TS},
-    {k:'pia', w:'top', a:9.1*TS}, {k:'balcao', w:'top', a:11.7*TS},
+    // COZINHA (parede de cima, cols 3–13) — tudo colado na parede e dentro do azulejo (escala menor p/ encaixar)
+    {k:'geladeira', w:'top', a:4.0*TS, scale:0.88}, {k:'fogao', w:'top', a:5.8*TS, scale:0.88}, {k:'botijao', w:'top', a:7.1*TS, scale:0.88},
+    {k:'pia', w:'top', a:8.6*TS, scale:0.88}, {k:'balcao', w:'top', a:11.3*TS, scale:0.88},
     // MESA DE JANTAR (solta)
     {k:'mesa', free:true, cx:13.5*TS, by:10.6*TS},
-    // QUARTO — cama+criado na parede de cima; guarda-roupa no canto direito (parede direita)
-    {k:'cama', w:'top', a:19.0*TS}, {k:'criado', w:'top', a:21.3*TS}, {k:'guardaroupa', w:'right', a:8.0*TS},
+    // QUARTO — cama+criado+guarda-roupa colados na parede de cima (guarda-roupa no canto direito)
+    {k:'cama', w:'top', a:19.0*TS}, {k:'criado', w:'top', a:21.0*TS}, {k:'guardaroupa', w:'top', a:23.4*TS, scale:0.88},
     // SALA ESQUERDA — grupo sofá/TV no mesmo eixo (cx=7) + cristaleira/rádio/planta na esquerda
     {k:'sofa_costas', w:'bottom', a:7.0*TS}, {k:'cristaleira', w:'left', a:9.4*TS},
     {k:'radio', w:'left', a:12.2*TS}, {k:'planta_comigo', w:'left', a:15.2*TS},
@@ -615,7 +616,7 @@
   const dog={x:12*TS,y:14*TS,dir:'right',animT:0,path:[[12,14],[15,14],[15,11],[12,11]].map(([a,b])=>({x:a*TS,y:b*TS})),wp:1,spd:0.3};
 
   // Encosta o móvel na parede pela ALTURA/LARGURA do sprite (zero sobreposição, zero vão).
-  function furnPlace(f){ const im=furnImg[f.k]; if(!im||!furnReady[f.k]) return null; const w=im.width, h=im.height; let ix,iy,cx,by;
+  function furnPlace(f){ const im=furnImg[f.k]; if(!im||!furnReady[f.k]) return null; const s=f.scale||1, w=Math.round(im.width*s), h=Math.round(im.height*s); let ix,iy,cx,by;
     if(f.free){ cx=f.cx; by=f.by; ix=(cx-w/2)|0; iy=(by-h)|0; }
     else if(f.w==='top'){ iy=WALL_T; ix=(f.a-w/2)|0; cx=f.a; by=WALL_T+h; }
     else if(f.w==='bottom'){ by=WALL_B; ix=(f.a-w/2)|0; cx=f.a; iy=WALL_B-h; }
@@ -714,7 +715,7 @@
       else { ctx.fillStyle='#3a2a1c'; ctx.fillRect((cx-7)|0,y|0,14,12); ctx.fillStyle='#8a7a5a'; ctx.fillRect((cx-5)|0,(y+2)|0,10,8); } }
     // Y-SORT: móveis encostados + TV + mesinha + cachorro + jogador
     const items=[];
-    for(const f of casaFurn){ const r=furnPlace(f); if(r) items.push({by:r.by, fn:()=>ctx.drawImage(furnImg[f.k],r.ix,r.iy)}); }
+    for(const f of casaFurn){ const r=furnPlace(f); if(r) items.push({by:r.by, fn:()=>ctx.drawImage(furnImg[f.k],r.ix,r.iy,r.w,r.h)}); }
     items.push({by:SALA_TV.by, fn:()=>drawTV((SALA_TV.cx-16)|0,(SALA_TV.by-33)|0,time)});
     items.push({by:SALA_MESINHA.by, fn:()=>{ const mx=(SALA_MESINHA.cx-TS)|0, my=(SALA_MESINHA.by-TS)|0; ctx.fillStyle=OL; ctx.fillRect(mx-1,my-1,2*TS+2,TS+2); ctx.fillStyle='#6e4a2e'; ctx.fillRect(mx,my,2*TS,TS); ctx.fillStyle='#5a3a22'; ctx.fillRect(mx,my+TS-3,2*TS,3); ctx.fillStyle='#e6e0d0'; ctx.fillRect(mx+5,my+2,14,8); ctx.fillStyle='#2b2420'; ctx.fillRect(mx+6,my+3,12,2); }});
     items.push({by:NOOK_MESINHA.by, fn:()=>{ const mx=(NOOK_MESINHA.cx-14)|0, my=(NOOK_MESINHA.by-TS)|0; ctx.fillStyle=OL; ctx.fillRect(mx-1,my-1,30,TS+2); ctx.fillStyle='#6e4a2e'; ctx.fillRect(mx,my,28,TS); ctx.fillStyle='#5a3a22'; ctx.fillRect(mx,my+TS-3,28,3); ctx.fillStyle='#b23a2e'; ctx.fillRect(mx+6,my+3,6,5); ctx.fillStyle='#e6e0d0'; ctx.fillRect(mx+16,my+3,8,6); }});
@@ -733,7 +734,8 @@
     if(DEBUG_GRID){ ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1; for(let x=0;x<=VW;x+=TS){ ctx.beginPath(); ctx.moveTo(x+0.5,0); ctx.lineTo(x+0.5,VH); ctx.stroke(); } for(let y=0;y<=VH;y+=TS){ ctx.beginPath(); ctx.moveTo(0,y+0.5); ctx.lineTo(VW,y+0.5); ctx.stroke(); }
       ctx.fillStyle='rgba(80,160,255,.18)'; ctx.fillRect(0,0,VW,WALL_T); ctx.fillRect(0,WALL_B,VW,VH-WALL_B); ctx.fillRect(0,0,WALL_L,VH); ctx.fillRect(WALL_R,0,VW-WALL_R,VH);
       ctx.fillStyle='rgba(255,80,80,.25)'; for(const c of casaColliders) ctx.fillRect(c.x0,c.y0,c.x1-c.x0,c.y1-c.y0); }
-    if(!paused){ const ft=(player.y+16)/TS|0, fx=(player.x+8)/TS|0; if(ft>=14&&fx>=11&&fx<=16){ ctx.fillStyle='#edc63a'; ctx.font='bold 8px monospace'; ctx.textAlign='center'; ctx.fillText('↓ SAIR DE CASA', 14*TS, 15.6*TS); ctx.textAlign='left'; } }
+    if(!paused){ const ft=(player.y+16)/TS|0, fx=(player.x+8)/TS|0; if(ft>=14&&fx>=11&&fx<=16){ ctx.fillStyle='#edc63a'; ctx.font='bold 8px monospace'; ctx.textAlign='center'; ctx.fillText('↓ SAIR DE CASA', 14*TS, 15.6*TS); ctx.textAlign='left'; }
+      if(Math.hypot((player.x+8)-4*TS,(player.y+8)-11*TS)<34){ const bx=(4*TS-5)|0, by=(8.6*TS)|0; ctx.fillStyle=OL; ctx.fillRect(bx-1,by-1,14,11); ctx.fillStyle='#edc63a'; ctx.fillRect(bx,by,12,9); ctx.fillStyle=OL; ctx.font='bold 7px monospace'; ctx.textAlign='center'; ctx.fillText('E',bx+6,by+7); ctx.textAlign='left'; } }
   }
   function draw(time){
     if(scene==='casa'){ drawCasa(time); return; }
