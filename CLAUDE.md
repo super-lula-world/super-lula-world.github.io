@@ -1,8 +1,12 @@
-# super-lula-world — contexto do projeto
+# Jogos Educativos — contexto do projeto
 
-Jogo em **pixel art** sobre a **ditadura militar brasileira (1964–1985)**. O jogador é
-uma pessoa comum que **atravessa a história**: anda pelo mapa, explora o cenário e vive
-os acontecimentos de cada período. Imersão histórica + um desafio por fase.
+Projeto guarda-chuva: uma **coleção de jogos educativos** em pixel art. Cada jogo tem
+seu próprio tema histórico/educativo. Este repositório é o site da coleção (GitHub Pages).
+
+O primeiro jogo é o **super-lula-world**, em **pixel art** sobre a **ditadura militar
+brasileira (1964–1985)**. O jogador é uma pessoa comum que **atravessa a história**: anda
+pelo mapa, explora o cenário e vive os acontecimentos de cada período. Imersão histórica
++ um desafio por fase. (As seções abaixo descrevem esse jogo.)
 
 > Idioma do projeto: **português (Brasil)**. Textos de interface, diálogos e commits em pt-BR.
 

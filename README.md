@@ -1,10 +1,15 @@
-# super-lula-world
+# Jogos Educativos
 
-Protótipos de um jogo em pixel art sobre a ditadura militar brasileira (1964–1985).
-O jogador é uma pessoa comum que atravessa a história: anda pelo mapa, explora o
-cenário e vive os acontecimentos de cada período.
+Uma coleção de jogos em pixel art sobre história e temas educativos. Cada jogo coloca
+o jogador dentro de um período para explorar e viver os acontecimentos.
 
-## Protótipos (pasta `prototipos/`)
+## super-lula-world — a ditadura militar (1964–1985)
+
+Primeiro jogo da coleção. Protótipos em pixel art sobre a ditadura militar brasileira
+(1964–1985). O jogador é uma pessoa comum que atravessa a história: anda pelo mapa,
+explora o cenário e vive os acontecimentos de cada período.
+
+### Protótipos (pasta `prototipos/`)
 
 São páginas HTML independentes — abra cada arquivo direto no navegador (duplo clique,
 ou arraste para uma aba). Não precisa instalar nada.
@@ -19,14 +24,14 @@ ou arraste para uma aba). Não precisa instalar nada.
 - Ação / interagir: `Espaço` ou `E`
 - No celular: controle direcional e botão `A` na tela
 
-## Estado atual
+### Estado atual
 
 Os protótipos são desenhados inteiramente em Canvas 2D (pixel art procedural: sprites
 com contorno e sombra, chão pré-renderizado, iluminação de golden hour, partículas).
 É a base para, num próximo passo, migrar para uma engine (ex.: Godot ou Phaser) onde
 entram tilesets e spritesheets de imagem.
 
-## Ideia geral
+### Ideia geral
 
 Um mapa por fase histórica, cada um com um desafio e o mesmo personagem envelhecendo:
 véspera do golpe → 1964 → AI-5 (1968) → anos de chumbo → milagre e censura →

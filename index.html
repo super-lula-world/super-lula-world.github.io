@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>super-lula-world — protótipos</title>
+<title>Jogos Educativos — super-lula-world</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Sans:wght@400;600&display=swap">
@@ -19,6 +19,9 @@
   header{ text-align:center; margin-bottom:38px; }
   h1{ font-family:var(--disp); font-size:clamp(16px,5vw,28px); color:var(--accent); margin:0 0 18px; line-height:1.5; text-wrap:balance; }
   .sub{ color:var(--muted); font-size:15px; max-width:56ch; margin:0 auto; line-height:1.6; }
+  .game-tag{ font-family:var(--disp); font-size:8px; letter-spacing:.5px; color:var(--accent2); margin:0 0 10px; }
+  .game-title{ font-size:20px; margin:0 0 8px; color:var(--ink); }
+  .game-desc{ color:var(--muted); font-size:14px; line-height:1.6; margin:0 0 20px; max-width:60ch; }
   .grid{ display:grid; grid-template-columns:1fr; gap:16px; }
   @media(min-width:620px){ .grid{ grid-template-columns:1fr 1fr; } }
   .card{ display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; text-decoration:none; color:inherit; transition:transform .12s ease, border-color .12s ease; }
@@ -35,9 +38,14 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>super-lula-world</h1>
-      <p class="sub">Protótipos de um jogo em pixel art sobre a ditadura militar brasileira (1964–1985). Você é uma pessoa comum atravessando a história — anda pelo mapa, explora e vive cada período.</p>
+      <h1>Jogos Educativos</h1>
+      <p class="sub">Uma coleção de jogos em pixel art sobre história e temas educativos. Cada jogo coloca você dentro de um período para explorar e viver os acontecimentos.</p>
     </header>
+
+    <section>
+      <p class="game-tag">JOGO · super-lula-world</p>
+      <h2 class="game-title">A ditadura militar brasileira (1964–1985)</h2>
+      <p class="game-desc">Você é uma pessoa comum atravessando a história — anda pelo mapa, explora e vive cada período. Protótipos abaixo:</p>
 
     <div class="grid">
       <a class="card" href="prototipos/vespera-do-golpe.html">
@@ -53,6 +61,7 @@
         <span class="play">▶ JOGAR</span>
       </a>
     </div>
+    </section>
 
     <p class="note">
       Controles: mover com <kbd>↑ ↓ ← →</kbd> ou <kbd>W A S D</kbd> · interagir com <kbd>Espaço</kbd> / <kbd>E</kbd>.<br>
