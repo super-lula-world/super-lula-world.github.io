@@ -1,0 +1,426 @@
+<title>Praça de 1964</title>
+<style>
+  /* Layout: cabine de jogo pixel — moldura escura/sépia ao redor de uma tela 3:2;
+     HUD no topo, canvas ao centro, controles de toque embaixo no celular. */
+  :root{
+    --bg:#ece3d2; --panel:#f6efe0; --ink:#2b2420; --muted:#6c6253;
+    --line:#cbbfa6; --accent:#9a3b2e; --accent2:#b9892f;
+    --screen-frame:#1d1a17;
+    --disp:"Press Start 2P", ui-monospace, monospace;
+    --body:"IBM Plex Sans", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --bg:#15120f; --panel:#201b16; --ink:#efe6d4; --muted:#9a8d78;
+    --line:#3a3127; --accent:#d9634e; --accent2:#d6a94a; color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#15120f; --panel:#201b16; --ink:#efe6d4; --muted:#9a8d78;
+    --line:#3a3127; --accent:#d9634e; --accent2:#d6a94a; color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--body);
+    display:flex; justify-content:center;
+    padding:0 16px;
+  }
+  .wrap{width:100%; max-width:760px; padding-block:18px; display:flex; flex-direction:column; gap:12px}
+
+  header h1{
+    font-family:var(--disp); font-size:clamp(13px,3.4vw,20px); line-height:1.5;
+    margin:0; color:var(--accent); text-wrap:balance;
+  }
+  header p{margin:6px 0 0; color:var(--muted); font-size:13.5px; max-width:60ch}
+
+  .hud{
+    display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px;
+  }
+  .hud .chap{font-family:var(--disp); font-size:9px; color:var(--accent2); letter-spacing:.5px}
+  .hud .goal{font-size:13px; color:var(--ink); min-width:0; flex:1}
+  .pips{display:flex; gap:5px}
+  .pip{width:14px; height:14px; border-radius:3px; border:2px solid var(--line); background:transparent}
+  .pip.on{background:var(--accent2); border-color:var(--accent2)}
+
+  .stage{
+    position:relative; width:100%; aspect-ratio:3/2;
+    background:var(--screen-frame);
+    border:6px solid var(--screen-frame); border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 0 0 2px #000;
+    overflow:hidden;
+  }
+  canvas{
+    display:block; width:100%; height:100%;
+    image-rendering:pixelated; image-rendering:crisp-edges;
+  }
+
+  /* overlays */
+  .overlay{position:absolute; inset:0; display:none; align-items:center; justify-content:center; padding:18px}
+  .overlay.show{display:flex}
+  .card{
+    width:100%; max-width:460px; background:var(--panel); color:var(--ink);
+    border:1px solid var(--line); border-radius:12px; padding:18px 18px 16px;
+    box-shadow:0 12px 32px rgba(0,0,0,.4);
+  }
+  .card .eyebrow{font-family:var(--disp); font-size:8.5px; color:var(--accent); letter-spacing:.5px; display:block; margin-bottom:8px}
+  .card h2{margin:0 0 8px; font-size:17px; line-height:1.25; text-wrap:balance}
+  .card p{margin:0 0 10px; font-size:14px; line-height:1.55; color:var(--ink)}
+  .card p.note{color:var(--muted); font-size:12.5px}
+  .card ul{margin:0 0 12px; padding-left:18px; font-size:13px; line-height:1.5; color:var(--muted)}
+  .btn{
+    font-family:var(--disp); font-size:10px; cursor:pointer;
+    background:var(--accent); color:#fff; border:none; border-radius:8px;
+    padding:11px 14px; letter-spacing:.5px;
+  }
+  .btn:focus-visible{outline:3px solid var(--accent2); outline-offset:2px}
+  .bubble-key{font-family:var(--disp); font-size:9px; background:var(--ink); color:var(--panel); padding:3px 5px; border-radius:4px}
+
+  /* controls */
+  .controls{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap}
+  .hint{font-size:12px; color:var(--muted)}
+  .hint kbd{font-family:var(--disp); font-size:8px; background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:3px 5px; color:var(--ink)}
+  .touch{display:none; align-items:center; gap:14px}
+  .dpad{display:grid; grid-template-columns:repeat(3,42px); grid-template-rows:repeat(3,42px); gap:4px}
+  .dpad button{
+    border:1px solid var(--line); background:var(--panel); color:var(--ink);
+    border-radius:8px; font-size:16px; cursor:pointer; touch-action:none; user-select:none;
+  }
+  .dpad .sp{visibility:hidden}
+  .act{
+    width:70px; height:70px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--accent); color:#fff; font-family:var(--disp); font-size:14px; touch-action:none; user-select:none;
+  }
+  @media (hover:none) and (pointer:coarse){ .touch{display:flex} .hint{display:none} }
+  @media (max-width:520px){ .touch{display:flex} }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Praça de 1964</h1>
+    <p>Protótipo do Capítulo 1 de um jogo pixel sobre a ditadura militar brasileira. Você anda pela praça de uma cidade no dia do golpe e descobre, aos poucos, o que está acontecendo.</p>
+  </header>
+
+  <div class="hud">
+    <span class="chap">CAP. 1 — O GOLPE</span>
+    <span class="goal" id="goal">Explore a praça e descubra o que mudou.</span>
+    <span class="pips" id="pips"></span>
+  </div>
+
+  <div class="stage">
+    <canvas id="game" width="384" height="256"></canvas>
+
+    <!-- intro -->
+    <div class="overlay show" id="intro">
+      <div class="card">
+        <span class="eyebrow">31 DE MARÇO DE 1964</span>
+        <h2>Um dia comum que não seria comum</h2>
+        <p>Você é um morador qualquer da cidade. Vai à praça como todo dia — mas algo mudou durante a noite.</p>
+        <p class="note">Ande e chegue perto da <b>banca de jornal</b>, do <b>alto-falante</b>, da <b>estudante</b> e dos <b>tanques</b>. Perto de cada um, aperte a ação para ouvir o que aconteceu.</p>
+        <button class="btn" id="start">Começar</button>
+      </div>
+    </div>
+
+    <!-- diálogo -->
+    <div class="overlay" id="dialog">
+      <div class="card">
+        <span class="eyebrow" id="dlg-eyebrow">MEMÓRIA</span>
+        <h2 id="dlg-title"></h2>
+        <p id="dlg-text"></p>
+        <button class="btn" id="dlg-close">Continuar</button>
+      </div>
+    </div>
+
+    <!-- fim do capítulo -->
+    <div class="overlay" id="done">
+      <div class="card">
+        <span class="eyebrow">CAPÍTULO 1 CONCLUÍDO</span>
+        <h2>Começou assim — sem um só voto</h2>
+        <p>Em poucos dias o novo regime se instalou. Ninguém sabia que duraria 21 anos.</p>
+        <p class="note">Próximos capítulos possíveis: <b>1968 — o AI-5</b>, <b>Anos de chumbo</b>, <b>Milagre e censura</b>, <b>Resistência e exílio</b>, <b>Abertura</b>, <b>Diretas Já</b> e <b>1985 — o fim</b>. Cada um seria um mapa, com o mesmo personagem mais velho.</p>
+        <button class="btn" id="done-close">Explorar de novo</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span class="hint">Mover: <kbd>↑ ↓ ← →</kbd> ou <kbd>WASD</kbd> &nbsp;·&nbsp; Ação: <kbd>Espaço</kbd> / <kbd>E</kbd></span>
+    <div class="touch">
+      <div class="dpad">
+        <span class="sp"></span><button data-dir="up" aria-label="Cima">▲</button><span class="sp"></span>
+        <button data-dir="left" aria-label="Esquerda">◀</button><span class="sp"></span><button data-dir="right" aria-label="Direita">▶</button>
+        <span class="sp"></span><button data-dir="down" aria-label="Baixo">▼</button><span class="sp"></span>
+      </div>
+      <button class="act" id="btnAct" aria-label="Ação">A</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const cv = document.getElementById('game');
+  const ctx = cv.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const TS = 16, MW = 24, MH = 16;
+
+  // ---- mapa (grade de tiles) -------------------------------------------
+  // g grama/praça · c calçada · S rua · # prédio · t árvore · o coreto · b banco
+  const grid = [];
+  for(let y=0;y<MH;y++){ grid.push(new Array(MW).fill('g')); }
+  function rect(x0,y0,x1,y1,ch){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) grid[y][x]=ch; }
+  // anel de rua + calçada
+  rect(0,0,MW-1,0,'S'); rect(0,MH-1,MW-1,MH-1,'S'); rect(0,0,0,MH-1,'S'); rect(MW-1,0,MW-1,MH-1,'S');
+  rect(1,1,MW-2,1,'c'); rect(1,MH-2,MW-2,MH-2,'c'); rect(1,1,1,MH-2,'c'); rect(MW-2,1,MW-2,MH-2,'c');
+  // prédios de cima: jornal, igreja, prefeitura-menor
+  rect(3,2,6,3,'#'); rect(9,2,12,3,'#'); rect(15,2,18,3,'#');
+  // prédio público embaixo
+  rect(9,12,14,13,'#');
+  // coreto no centro
+  rect(11,7,12,8,'o');
+  // árvores e bancos
+  [[3,8],[6,6],[20,6],[19,10],[4,12],[20,12],[14,6],[9,10]].forEach(([x,y])=>grid[y][x]='t');
+  [[10,9],[13,9],[11,10]].forEach(([x,y])=>grid[y][x]='b');
+
+  const solidTile = ch => ch==='#'||ch==='t'||ch==='o'||ch==='b';
+  // marca de "prédio" por tipo p/ desenho (igreja ganha cruz)
+  function buildingKind(x,y){
+    if(x>=9&&x<=12&&y<=3) return 'church';
+    if(x>=9&&x<=14&&y>=12) return 'gov';
+    return 'plain';
+  }
+
+  // ---- objetos interativos --------------------------------------------
+  const objects = [
+    {id:'banca', tx:5, ty:5, tw:1, th:1, sprite:'kiosk',
+     eyebrow:'BANCA DE JORNAL', title:'“Forças Armadas depõem Jango”',
+     text:'As manchetes de 1º de abril de 1964 anunciam: os militares derrubaram o presidente João Goulart. Era o começo de uma ditadura que iria durar 21 anos.'},
+    {id:'radio', tx:18, ty:5, tw:1, th:1, sprite:'horn',
+     eyebrow:'ALTO-FALANTE', title:'A voz oficial no rádio',
+     text:'Pelo rádio, os militares falam em “restaurar a ordem” e conter o “perigo comunista”. Parte das pessoas comemora nas ruas; outras ficam em silêncio, pressentindo o que vem.'},
+    {id:'estudante', tx:8, ty:9, tw:1, th:1, sprite:'npc',
+     eyebrow:'UMA ESTUDANTE', title:'“Dizem que é só por uns dias…”',
+     text:'Uma estudante sussurra que o governo militar seria rápido, só até “organizar o país”. Quase ninguém imagina os anos de prisões, censura e exílio que virão.'},
+    {id:'tanque', tx:15, ty:13, tw:2, th:1, sprite:'tank',
+     eyebrow:'NAS RUAS', title:'Tanques ocupam a cidade',
+     text:'Tanques tomam as ruas e cercam os prédios públicos. O Congresso é pressionado. Em poucos dias, o novo regime se instala — sem nenhuma eleição.'},
+  ];
+  const found = {};
+  objects.forEach(o=>found[o.id]=false);
+
+  function objSolid(tx,ty){
+    for(const o of objects){ if(tx>=o.tx&&tx<o.tx+o.tw&&ty>=o.ty&&ty<o.ty+o.th) return true; }
+    return false;
+  }
+
+  // ---- jogador ---------------------------------------------------------
+  const player = {x:5*TS, y:11*TS, dir:'down', moving:false, anim:0};
+  const SPD = 1.15;
+
+  function blocked(px,py){
+    // caixa dos "pés": 10x6 na base do sprite 16x16
+    const bx=px+3, by=py+9, bw=10, bh=6;
+    const corners=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
+    for(const [cx,cy] of corners){
+      const tx=Math.floor(cx/TS), ty=Math.floor(cy/TS);
+      if(tx<0||ty<0||tx>=MW||ty>=MH) return true;
+      if(solidTile(grid[ty][tx])) return true;
+      if(objSolid(tx,ty)) return true;
+    }
+    return false;
+  }
+
+  // ---- input -----------------------------------------------------------
+  const keys = {};
+  const map = {ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
+  let paused = true;
+  addEventListener('keydown',e=>{
+    if(map[e.key]){ keys[map[e.key]]=true; e.preventDefault(); }
+    if((e.key===' '||e.key==='e'||e.key==='E'||e.key==='Enter')){ e.preventDefault(); tryAction(); }
+  });
+  addEventListener('keyup',e=>{ if(map[e.key]) keys[map[e.key]]=false; });
+
+  // toque
+  document.querySelectorAll('.dpad button').forEach(b=>{
+    const d=b.dataset.dir; if(!d) return;
+    const on=e=>{e.preventDefault();keys[d]=true;}; const off=e=>{e.preventDefault();keys[d]=false;};
+    b.addEventListener('touchstart',on,{passive:false}); b.addEventListener('touchend',off,{passive:false});
+    b.addEventListener('mousedown',on); b.addEventListener('mouseup',off); b.addEventListener('mouseleave',off);
+  });
+  document.getElementById('btnAct').addEventListener('click',tryAction);
+
+  // ---- ação / diálogo --------------------------------------------------
+  function nearObject(){
+    const pcx=player.x+8, pcy=player.y+10;
+    for(const o of objects){
+      const ocx=(o.tx+o.tw/2)*TS, ocy=(o.ty+o.th)*TS-4;
+      if(Math.hypot(pcx-ocx,pcy-ocy) < 22+ (o.tw-1)*8) return o;
+    }
+    return null;
+  }
+  function tryAction(){
+    if(paused){ // fecha overlays visíveis
+      if(dialog.classList.contains('show')) closeDialog();
+      return;
+    }
+    const o = nearObject();
+    if(o) openDialog(o);
+  }
+  const dialog=document.getElementById('dialog');
+  function openDialog(o){
+    document.getElementById('dlg-eyebrow').textContent=o.eyebrow;
+    document.getElementById('dlg-title').textContent=o.title;
+    document.getElementById('dlg-text').textContent=o.text;
+    dialog.classList.add('show'); paused=true; dialog._obj=o;
+  }
+  function closeDialog(){
+    const o=dialog._obj; dialog.classList.remove('show'); paused=false;
+    if(o && !found[o.id]){ found[o.id]=true; updateHUD(); if(Object.values(found).every(Boolean)) finish(); }
+  }
+  document.getElementById('dlg-close').addEventListener('click',closeDialog);
+
+  function finish(){ paused=true; document.getElementById('done').classList.add('show'); }
+  document.getElementById('done-close').addEventListener('click',()=>{
+    document.getElementById('done').classList.remove('show'); paused=false;
+  });
+  document.getElementById('start').addEventListener('click',()=>{
+    document.getElementById('intro').classList.remove('show'); paused=false;
+  });
+
+  function updateHUD(){
+    const n=Object.values(found).filter(Boolean).length;
+    document.getElementById('goal').textContent = n<4 ? 'Descubra o que mudou na cidade.' : 'Você juntou as peças do dia.';
+    const pips=document.getElementById('pips'); pips.innerHTML='';
+    for(let i=0;i<4;i++){ const s=document.createElement('span'); s.className='pip'+(i<n?' on':''); pips.appendChild(s); }
+  }
+  updateHUD();
+
+  // ---- desenho (pixel art) --------------------------------------------
+  function p(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x,y,w,h); }
+
+  function drawGround(){
+    for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){
+      const ch=grid[y][x], px=x*TS, py=y*TS, seed=(x*7+y*13)%5;
+      if(ch==='S'){ p(px,py,TS,TS,'#3b3733'); if(seed===0)p(px+5,py+6,3,3,'#2f2c29'); }
+      else if(ch==='c'){ p(px,py,TS,TS,'#c3b7a0'); p(px,py,TS,1,'#a99e86'); p(px,py,1,TS,'#a99e86'); }
+      else { // grama (praça) sob tudo que não é rua/calçada
+        p(px,py,TS,TS,'#5c7d3b'); p(px+2,py+3,2,2,'#6d9247'); if(seed===1)p(px+9,py+10,2,2,'#4e6c32');
+      }
+    }
+    // caminhos de calçada internos (cruz da praça) por cima da grama
+  }
+
+  function drawBuilding(x,y){
+    const px=x*TS, py=y*TS, kind=buildingKind(x,y);
+    let roof='#8a5a3c', edge='#6e452d';
+    if(kind==='church'){ roof='#8f8a82'; edge='#6f6a62'; }
+    if(kind==='gov'){ roof='#b7ac90'; edge='#938a72'; }
+    p(px,py,TS,TS,roof); p(px,py,TS,2,'#00000022'); p(px,py+TS-2,TS,2,edge);
+    p(px+2,py+5,4,4,'#00000022'); p(px+9,py+9,4,3,'#ffffff18');
+    // porta/toldo quando a borda de baixo dá pra fora
+    if(y+1<MH && grid[y+1][x]!=='#'){ p(px+5,py+TS-3,6,3,'#2c2622'); }
+    if(kind==='church'){ // cruz no topo
+      p(px+7,py-5,2,7,'#efe6d4'); p(px+5,py-3,6,2,'#efe6d4');
+    }
+  }
+  function drawTree(x,y){
+    const px=x*TS, py=y*TS;
+    p(px+7,py+9,2,5,'#5a3a22');
+    p(px+3,py+2,10,9,'#3f6b2f'); p(px+4,py+1,8,2,'#4f7d39'); p(px+5,py+5,3,3,'#345a27');
+  }
+  function drawBandstand(x,y){ // desenha só no canto superior-esquerdo do bloco 2x2
+    if(grid[y][x-1]==='o'||grid[y-1] && grid[y-1][x]==='o') return;
+    const px=x*TS, py=y*TS;
+    p(px,py+6,TS*2,TS*2-6,'#b9892f22');
+    p(px+2,py+2,TS*2-4,10,'#c9922f'); p(px+2,py+1,TS*2-4,2,'#a9771f'); // telhado
+    p(px+3,py+12,2,TS*2-14,'#8c6a3a'); p(px+TS*2-5,py+12,2,TS*2-14,'#8c6a3a'); // colunas
+  }
+  function drawBench(x,y){ const px=x*TS,py=y*TS; p(px+2,py+7,TS-4,3,'#8a5a3c'); p(px+2,py+4,TS-4,2,'#9c6b4a'); p(px+3,py+10,2,3,'#5a3a22'); p(px+TS-5,py+10,2,3,'#5a3a22'); }
+
+  function drawPerson(px,py,colors,dir,frame){
+    const {skin,hair,shirt,pants,shoe}=colors;
+    const step = frame?1:0;
+    p(px+5,py+2,6,4,hair);               // cabelo
+    if(dir==='down'||dir==='left'||dir==='right'){ p(px+6,py+5,4,3,skin); } else { p(px+6,py+5,4,3,hair); } // rosto/nuca
+    if(dir==='down'){ p(px+6,py+6,1,1,'#2b2420'); p(px+9,py+6,1,1,'#2b2420'); }
+    p(px+4,py+8,8,5,shirt);              // tronco
+    if(dir==='left'){ p(px+3,py+9,2,3,skin); } else if(dir==='right'){ p(px+11,py+9,2,3,skin); }
+    else { p(px+3,py+9,2,3,skin); p(px+11,py+9,2,3,skin); } // braços
+    p(px+5,py+13,2,2,pants); p(px+9,py+13,2,2,pants); // pernas
+    p(px+5,py+15-step,2,1,shoe); p(px+9,py+14+step,2,1,shoe); // pés (passo)
+  }
+
+  function drawKiosk(o){ const px=o.tx*TS, py=o.ty*TS;
+    p(px+2,py+6,TS-4,TS-6,'#7a5230'); p(px+2,py+9,TS-4,2,'#5a3a22');
+    p(px+1,py+2,TS-2,5,'#9a3b2e'); p(px+3,py+2,2,5,'#efe6d4'); p(px+7,py+2,2,5,'#efe6d4'); p(px+11,py+2,2,5,'#efe6d4'); // toldo listrado
+    p(px+4,py+10,8,3,'#d8cdb4'); // jornais na banca
+  }
+  function drawHorn(o){ const px=o.tx*TS, py=o.ty*TS; // poste com alto-falante
+    p(px+7,py+3,2,12,'#45413a'); p(px+5,py+2,6,4,'#9a3b2e'); p(px+10,py+2,3,4,'#c9922f'); // corneta
+    p(px+2,py+13,12,2,'#45413a');
+  }
+  function drawTank(o){ const px=o.tx*TS, py=o.ty*TS, w=o.tw*TS;
+    p(px+2,py+8,w-4,6,'#3f4a28');        // casco
+    p(px+2,py+14,w-4,2,'#1d2113');       // esteira
+    for(let i=0;i<w-4;i+=4) p(px+3+i,py+14,2,2,'#0e0f08');
+    p(px+6,py+3,12,6,'#4a5730');         // torre
+    p(px+17,py+5,w-14,2,'#2c3420');      // canhão
+  }
+
+  function draw(){
+    drawGround();
+    // elementos fixos (ordem simples: fundo→frente)
+    for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){
+      const ch=grid[y][x];
+      if(ch==='#') drawBuilding(x,y);
+      else if(ch==='b') drawBench(x,y);
+    }
+    for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){ if(grid[y][x]==='o') drawBandstand(x,y); }
+
+    // entidades ordenadas por "pé" (y) p/ sobreposição
+    const ents=[];
+    objects.forEach(o=> ents.push({y:(o.ty+o.th)*TS, draw:()=>{
+      if(o.sprite==='kiosk')drawKiosk(o); else if(o.sprite==='horn')drawHorn(o);
+      else if(o.sprite==='tank')drawTank(o);
+      else if(o.sprite==='npc')drawPerson(o.tx*TS,o.ty*TS,{skin:'#d9a06b',hair:'#5a3a22',shirt:'#5d7a3a',pants:'#3a4a63',shoe:'#2b2420'},'down',0);
+      // marcador se ainda não visto
+      if(!found[o.id]){ const bx=(o.tx+o.tw/2)*TS-2, by=o.ty*TS-7+Math.round(Math.sin(Date.now()/250)); p(bx,by,4,5,'#b9892f'); p(bx,by+6,4,2,'#b9892f'); }
+    }}));
+    ents.push({y:player.y+TS, draw:()=>drawPerson(Math.round(player.x),Math.round(player.y),{skin:'#e0ac69',hair:'#2e2015',shirt:'#9a3b2e',pants:'#35435c',shoe:'#1d1a17'},player.dir,player.moving?Math.floor(player.anim):0)});
+    for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){ if(grid[y][x]==='t') ents.push({y:y*TS+TS,draw:()=>drawTree(x,y)}); }
+    ents.sort((a,b)=>a.y-b.y).forEach(e=>e.draw());
+
+    // dica "ação" quando perto
+    if(!paused){ const o=nearObject(); if(o){ const bx=Math.round(player.x)+2, by=Math.round(player.y)-8; p(bx,by,12,7,'#1d1a17'); ctx.fillStyle='#efe6d4'; ctx.font='7px monospace'; ctx.fillText('!',bx+5,by+6); } }
+  }
+
+  // ---- loop ------------------------------------------------------------
+  function update(dt){
+    if(paused){ player.moving=false; return; }
+    let dx=0,dy=0;
+    if(keys.up){dy=-1;player.dir='up';} else if(keys.down){dy=1;player.dir='down';}
+    if(keys.left){dx=-1;player.dir='left';} else if(keys.right){dx=1;player.dir='right';}
+    player.moving = !!(dx||dy);
+    if(dx&&dy){ dx*=0.7071; dy*=0.7071; }
+    const nx=player.x+dx*SPD, ny=player.y+dy*SPD;
+    if(dx && !blocked(nx,player.y)) player.x=nx;
+    if(dy && !blocked(player.x,ny)) player.y=ny;
+    player.x=Math.max(0,Math.min((MW-1)*TS,player.x));
+    player.y=Math.max(0,Math.min((MH-1)*TS,player.y));
+    if(player.moving){ player.anim=(player.anim+dt*0.008)%2; }
+  }
+  let last=performance.now();
+  function frame(t){ const dt=Math.min(40,t-last); last=t; update(dt); ctx.clearRect(0,0,cv.width,cv.height); draw(); requestAnimationFrame(frame); }
+
+  // hot-reload: preserva posição/progresso p/ quem está com a página aberta
+  const hot=window.claude&&window.claude.hot;
+  function boot(data){
+    if(data&&data.player){ player.x=data.player.x; player.y=data.player.y; player.dir=data.player.dir; }
+    if(data&&data.found){ Object.assign(found,data.found); updateHUD(); }
+    if(data&&data.started){ document.getElementById('intro').classList.remove('show'); paused=false; }
+    requestAnimationFrame(frame);
+  }
+  if(hot&&hot.snapshot){ hot.snapshot(()=>({player:{x:player.x,y:player.y,dir:player.dir},found,started:!document.getElementById('intro').classList.contains('show')})); }
+  (hot&&hot.ready)?hot.ready(boot):boot(hot&&hot.data);
+})();
+</script>
