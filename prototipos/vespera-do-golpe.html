@@ -222,6 +222,18 @@
     e.spr={c:s.c,w:40,h:56};
   }
   function genBush(e){ const s=mk(20,16),x=s.x; x.fillStyle=OL; x.beginPath(); x.arc(10,9,8.5,0,6.3); x.fill(); x.fillStyle='#2e4d22'; x.beginPath(); x.arc(10,9,7.5,0,6.3); x.fill(); x.fillStyle='#3a5e2b'; x.beginPath(); x.arc(8,7,5,0,6.3); x.fill(); x.fillStyle='#e0604b'; x.fillRect(7,8,2,2); x.fillStyle='#edc63a'; x.fillRect(12,10,2,2); e.spr={c:s.c,w:20,h:16}; }
+  // MURO caiado baixo (divisa entre lotes)
+  function genMuro(e){ const W=e.fw*16, s=mk(W,20), x=s.x; O(x,0,7,W,12,'#dcd6c6');
+    x.fillStyle='#ccc5b2'; x.fillRect(0,7,W,2); // topo claro
+    x.fillStyle='rgba(0,0,0,.13)'; for(let i=3;i<W;i+=6) x.fillRect(i,10,1,8); // juntas
+    x.fillStyle=shade('#dcd6c6',.8); x.fillRect(0,17,W,2); // base
+    e.spr={c:s.c,w:W,h:20}; }
+  // POSTE de concreto com cruzeta e isoladores (rede elétrica anos 60)
+  function genPoste(e){ const s=mk(12,66), x=s.x; O(x,5,8,2,56,'#9a948a'); x.fillStyle='#b7b1a5'; x.fillRect(5,8,1,56);
+    x.fillStyle=OL; x.fillRect(0,16,12,3); x.fillStyle='#6e4a2e'; x.fillRect(0,17,12,1); // cruzeta alta
+    x.fillStyle=OL; x.fillRect(2,24,8,2); x.fillStyle='#6e4a2e'; x.fillRect(2,24,8,1); // cruzeta baixa
+    x.fillStyle='#3f4e58'; x.fillRect(1,14,1,2); x.fillRect(10,14,1,2); x.fillRect(5,12,1,2); // isoladores
+    e.spr={c:s.c,w:12,h:66}; }
 
   function genLamp(e){ const s=mk(14,34),x=s.x; O(x,6,8,2,24,'#3a352e'); x.fillStyle='#2a251f'; x.fillRect(7,8,1,24); O(x,3,2,8,7,'#2b2420'); x.fillStyle='#ffe6a6'; x.fillRect(5,4,4,4); x.fillStyle='#fff6d8'; x.fillRect(5,4,2,2); x.fillStyle='#3a352e'; x.fillRect(2,32,10,2); e.spr={c:s.c,w:14,h:34}; }
   function genFence(e){ const s=mk(16,14),x=s.x; P(x,1,5,14,2,'#8a6a44'); O(x,3,2,2,10,'#8a6a44'); O(x,11,2,2,10,'#8a6a44'); x.fillStyle='#a9824a'; x.fillRect(3,2,2,1); x.fillRect(11,2,2,1); e.spr={c:s.c,w:16,h:14}; }
@@ -321,6 +333,11 @@
   // VEÍCULOS PARADOS (Fusca e Kombi) — na rua, encostados nas calçadas
   defs.push({type:'car',tx:22,ty:16,fw:4,fh:1,model:'fusca',gen:()=>{}});
   defs.push({type:'car',tx:5,ty:14,fw:5,fh:1,model:'kombi',gen:()=>{}});
+  // MUROS caiados (divisa dos lotes) e POSTES de energia com fios
+  [[26,11,3],[8,20,7],[17,20,6]].forEach(([x,y,w])=>defs.push({type:'muro',tx:x,ty:y,fw:w,fh:1,solid:false,gen:genMuro}));
+  [[6,17],[13,17],[20,17],[27,17],[34,17]].forEach(([x,y])=>defs.push({type:'poste',tx:x,ty:y,fw:1,fh:1,solid:false,gen:genPoste}));
+  // TELEFONE público na calçada
+  defs.push({type:'phone',tx:25,ty:13,fw:1,fh:1,solid:false,gen:()=>{}});
   defs.forEach(d=>{ const e=add(d); d.gen(e); });
 
   // lampiões (com luz)
@@ -355,7 +372,7 @@
   const points={ radio:[5.5,12], banca:[24.8,13.6], vizinhos:[14,13], bar:[6.5,23.4] };
   const found={}; order.forEach(k=>found[k]=false);
 
-  const player={x:8*TS,y:13*TS,dir:'down',moving:false,animT:0,phase:0,blinkT:2000,closing:0,col:{kind:'civil',skin:'#e7b377',hair:'#2a1c12',shirt:'#9a3b2e',pants:'#334055',shoe:'#201a14'}};
+  const player={x:13*TS,y:10*TS,dir:'down',moving:false,animT:0,phase:0,blinkT:2000,closing:0,col:{kind:'civil',skin:'#e7b377',hair:'#2a1c12',shirt:'#9a3b2e',pants:'#334055',shoe:'#201a14'}};
   player.sheet=buildChar(player.col);
 
   // ---- LOADER DE SPRITES DO JOGADOR (PixelLab) ----
@@ -379,7 +396,7 @@
   // Por tipo (col.kind): 4 direções × 4 frames, PNGs 48×48 em assets/chars/<kind>_<dir>_<f>.png.
   // Carrega em segundo plano; cada tipo só é usado quando seus 16 frames carregam (senão,
   // drawActor cai no sprite procedural buildChar — fallback, nada quebra).
-  const NPC_KINDS=['suit','dress','soldier'];
+  const NPC_KINDS=['suit','dress','soldier','dog'];
   const npcImgSheets={}; const npcReady={};
   NPC_KINDS.forEach(kind=>{
     npcImgSheets[kind]={down:[],up:[],left:[],right:[]}; npcReady[kind]=false; let ok=0;
@@ -411,6 +428,9 @@
   CAR_MODELS.forEach(m=>{ const img=new Image(); carReady[m]=false;
     img.onload=()=>{ carReady[m]=true; }; img.src=`../assets/objs/car_${m}.png`; carImg[m]=img; });
 
+  // ---- TELEFONE PÚBLICO de época (PixelLab) ----
+  const phoneImg=new Image(); let phoneReady=false; phoneImg.onload=()=>{ phoneReady=true; }; phoneImg.src='../assets/objs/phone.png';
+
   const SPD=1.2;
   function blocked(px,py){ const bx=px+3,by=py+16,bw=10,bh=4,c=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
     for(const[cx,cy]of c){ const tx=cx/TS|0,ty=cy/TS|0; if(tx<0||ty<0||tx>=MW||ty>=MH) return true; if(solid[ty][tx]) return true; } return false; }
@@ -434,8 +454,11 @@
     const clothes=[['#cf5a46',0.22],['#e0c24a',0.42],['#5a7fae',0.62],['#e6e0d0',0.8]];
     for(const[col,t] of clothes){ const cx=x0+(x1-x0)*t, cy=y0+(y1-y0)*t+sag*4*t*(1-t), sway=Math.sin(time/520+t*6)*1.5;
       const px=(cx+sway)|0, py=cy|0; ctx.fillStyle=OL; ctx.fillRect(px-4,py,9,13); ctx.fillStyle=col; ctx.fillRect(px-3,py+1,7,11); ctx.fillStyle=shade(col,1.15); ctx.fillRect(px-3,py+1,3,11); } }
-  function drawWires(){ const lx=[2,9,16,23,30,37].map(x=>(x+0.5)*TS), y=12.3*TS; ctx.strokeStyle='rgba(22,15,10,.65)'; ctx.lineWidth=1;
-    for(let i=0;i<lx.length-1;i++){ ctx.beginPath(); ctx.moveTo(lx[i],y); ctx.quadraticCurveTo((lx[i]+lx[i+1])/2,y+7,lx[i+1],y); ctx.stroke(); } }
+  function drawWires(){ ctx.strokeStyle='rgba(22,15,10,.65)'; ctx.lineWidth=1;
+    const lx=[2,9,16,23,30,37].map(x=>(x+0.5)*TS), yl=12.3*TS;
+    for(let i=0;i<lx.length-1;i++){ ctx.beginPath(); ctx.moveTo(lx[i],yl); ctx.quadraticCurveTo((lx[i]+lx[i+1])/2,yl+7,lx[i+1],yl); ctx.stroke(); }
+    const px=[6,13,20,27,34].map(x=>(x+0.5)*TS), yp=18*TS-50; // altura da cruzeta dos postes
+    for(let i=0;i<px.length-1;i++){ ctx.beginPath(); ctx.moveTo(px[i],yp); ctx.quadraticCurveTo((px[i]+px[i+1])/2,yp+9,px[i+1],yp); ctx.stroke(); } }
   const spawn=o=>{ if(parts.length<240) parts.push(o); };
 
   const keys={}, kmap={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
@@ -446,7 +469,7 @@
   document.getElementById('btnAct').addEventListener('click',act);
   function near(){ const pcx=player.x/TS+0.5, pcy=player.y/TS+1; for(const k of ['radio','banca','vizinhos','bar']){ const[tx,ty]=points[k]; if(Math.hypot(pcx-tx,pcy-ty)<1.7) return k; } if(Math.hypot((player.x+8)-(jeep.x+jeep.w/2),(player.y+8)-(jeep.y+8))<34) return 'jipe'; return null; }
   const dialog=document.getElementById('dialog');
-  function act(){ if(paused){ if(dialog.classList.contains('show')) closeD(); return; } const k=near(); if(k) openD(k); }
+  function act(){ if(paused){ if(dialog.classList.contains('show')) closeD(); return; } if(scene!=='cidade') return; const k=near(); if(k) openD(k); }
   function openD(k){ const i=INFO[k]; document.getElementById('dlg-eyebrow').textContent=i.eyebrow; document.getElementById('dlg-title').textContent=i.title; document.getElementById('dlg-text').textContent=i.text; dialog.classList.add('show'); paused=true; dialog._k=k; }
   function closeD(){ const k=dialog._k; dialog.classList.remove('show'); paused=false; if(k&&!found[k]){ found[k]=true; hud(); if(order.every(x=>found[x])) finish(); } }
   document.getElementById('dlg-close').addEventListener('click',closeD);
@@ -496,7 +519,7 @@
     ctx.fillStyle='rgba(18,12,28,.36)'; ctx.beginPath(); ctx.ellipse(x+w/2,y+22,w*0.56,7,0,0,6.3); ctx.fill();
     if(tankReady){
       // SPRITE do PixelLab (PNG já aparado): escala pra ficar proporcional e base na sombra
-      const TANK_SCALE=1.5;
+      const TANK_SCALE=1.95;
       const dw=Math.round(tankImg.width*TANK_SCALE), dh=Math.round(tankImg.height*TANK_SCALE);
       const dx=(x+w/2-dw/2)|0, dy=(y+24-dh)|0;   // centrado no corpo; esteira encosta na sombra
       if(TANK_FLIP){ ctx.save(); ctx.translate(dx+dw,0); ctx.scale(-1,1); ctx.drawImage(tankImg,0,dy,dw,dh); ctx.restore(); }
@@ -541,7 +564,64 @@
     else { ctx.fillStyle=q.col; ctx.globalAlpha=Math.min(1,a*1.6); ctx.fillRect(q.x|0,q.y|0,2,2); ctx.globalAlpha=1; } } }
 
   const cam={x:0,y:0};
+  // ======================= CENA: CASA (interior) =======================
+  let scene='casa';
+  const casaSolids=[[2,8,3,2],[12,2,3,1],[13,6,2,1]]; // sofá, TV, mesinha (tx,ty,w,h)
+  const dog={x:6*TS,y:12*TS,dir:'right',animT:0,path:[[5,12],[21,12],[21,7],[6,7]].map(([a,b])=>({x:a*TS,y:b*TS})),wp:1,spd:0.32};
+  function blockedCasa(px,py){ const bx=px+3,by=py+16,bw=10,bh=4,cs=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
+    for(const[cx,cy] of cs){ const tx=cx/TS|0, ty=cy/TS|0, door=(tx>=13&&tx<=14);
+      if(tx<1||tx>26||ty<1) return true;
+      if(ty>16&&!door) return true; if(ty>18) return true;
+      for(const f of casaSolids) if(tx>=f[0]&&tx<f[0]+f[2]&&ty>=f[1]&&ty<f[1]+f[3]) return true; }
+    return false; }
+  function goCidade(){ scene='cidade'; player.x=32*TS; player.y=12*TS; player.dir='down'; player.moving=false; cam.x=0; cam.y=0; }
+  function updateCasa(dt,time){
+    player.blinkT-=dt; if(player.blinkT<=0){ player.closing=130; player.blinkT=1800+Math.random()*3200; } if(player.closing>0) player.closing-=dt;
+    { const t=dog.path[dog.wp]; let ddx=t.x-dog.x, ddy=t.y-dog.y; const d=Math.hypot(ddx,ddy)||1, step=dog.spd*dt*0.06;
+      if(d<=step){ dog.x=t.x; dog.y=t.y; dog.wp=(dog.wp+1)%dog.path.length; } else { dog.x+=ddx/d*step; dog.y+=ddy/d*step; }
+      if(Math.abs(ddx)>Math.abs(ddy)) dog.dir=ddx<0?'left':'right'; else dog.dir=ddy<0?'up':'down'; dog.animT=(dog.animT+dt*0.01)%4; }
+    if(paused){ player.moving=false; return; }
+    let dx=0,dy=0;
+    if(keys.up){dy=-1;player.dir='up';} else if(keys.down){dy=1;player.dir='down';}
+    if(keys.left){dx=-1;player.dir='left';} else if(keys.right){dx=1;player.dir='right';}
+    player.moving=!!(dx||dy); if(dx&&dy){dx*=.7071;dy*=.7071;}
+    const nx=player.x+dx*SPD, ny=player.y+dy*SPD;
+    if(dx&&!blockedCasa(nx,player.y)) player.x=nx; if(dy&&!blockedCasa(player.x,ny)) player.y=ny;
+    if(player.moving) player.animT=(player.animT+dt*.009)%4;
+    const ft=(player.y+16)/TS|0, fx=(player.x+8)/TS|0; if(ft>=17&&fx>=12&&fx<=15) goCidade();
+  }
+  function drawSofa(x,y){ const w=3*TS,h=2*TS; ctx.fillStyle=OL; ctx.fillRect(x-1,y-1,w+2,h+2); ctx.fillStyle='#4a6d7a'; ctx.fillRect(x,y,w,h);
+    ctx.fillStyle='#5f8592'; ctx.fillRect(x+3,y+4,w-6,h-8); ctx.fillStyle='#3a5560'; ctx.fillRect(x,y,6,h); ctx.fillRect(x+w-6,y,6,h); ctx.fillStyle='#6f98a4'; ctx.fillRect(x+8,y+5,w-16,3); }
+  function drawMesa(x,y){ const w=2*TS,h=TS; ctx.fillStyle=OL; ctx.fillRect(x-1,y-1,w+2,h+2); ctx.fillStyle='#6e4a2e'; ctx.fillRect(x,y,w,h); ctx.fillStyle='#5a3a22'; ctx.fillRect(x,y+h-3,w,3);
+    ctx.fillStyle='#e6e0d0'; ctx.fillRect(x+5,y+2,14,9); ctx.fillStyle='#2b2420'; ctx.fillRect(x+6,y+3,12,2); for(let i=0;i<3;i++) ctx.fillRect(x+6,y+6+i*2,12,1); }
+  function drawTV(x,y,time){ ctx.fillStyle=OL; ctx.fillRect(x-1,y-1,3*TS+2,2*TS+2); ctx.fillStyle='#6e4a2e'; ctx.fillRect(x,y,3*TS,2*TS); ctx.fillStyle='#5a3a22'; ctx.fillRect(x,y+2*TS-4,3*TS,4);
+    const sx=x+5,sy=y+5,sw=3*TS-24,sh=2*TS-12, fl=Math.sin(time/70)*0.5+0.5; ctx.fillStyle=OL; ctx.fillRect(sx-2,sy-2,sw+4,sh+4);
+    ctx.fillStyle='#39506b'; ctx.fillRect(sx,sy,sw,sh); ctx.fillStyle='#223243'; ctx.fillRect(sx+sw/2-4,sy+3,8,sh-3); ctx.fillStyle='#4a6076'; ctx.fillRect(sx+sw/2-3,sy+2,6,4); // âncora
+    ctx.fillStyle='#b23a2e'; ctx.fillRect(sx,sy+sh-5,sw,5); ctx.fillStyle='#f2efe6'; for(let i=0;i<4;i++) ctx.fillRect(sx+2+((i*6+(time*0.02))%(sw-4)),sy+sh-3,2,1); // tarja plantão
+    ctx.fillStyle='rgba(255,255,255,'+(0.05+0.05*fl)+')'; for(let i=0;i<sh;i+=2) ctx.fillRect(sx,sy+i,sw,1); // scanlines
+    ctx.fillStyle='#caa060'; ctx.fillRect(x+3*TS-14,sy+2,4,4); ctx.fillRect(x+3*TS-14,sy+10,4,4);
+    ctx.strokeStyle='#b9b2a2'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x+TS,y); ctx.lineTo(x+6,y-11); ctx.moveTo(x+2*TS,y); ctx.lineTo(x+3*TS-6,y-13); ctx.stroke();
+    ctx.fillStyle=OL; ctx.fillRect(x+4,y+2*TS,3,6); ctx.fillRect(x+3*TS-7,y+2*TS,3,6); }
+  function drawDog(time){ const fcx=dog.x+8, baseY=dog.y+16, fr=(dog.animT|0)%4; shadow(fcx,baseY,6);
+    if(npcReady['dog']){ ctx.drawImage(npcImgSheets['dog'][dog.dir][fr],(fcx-24)|0,(baseY-44)|0); }
+    else { ctx.fillStyle=OL; ctx.fillRect((fcx-8)|0,(baseY-9)|0,16,8); ctx.fillStyle='#7a5230'; ctx.fillRect((fcx-7)|0,(baseY-8)|0,14,6); ctx.fillRect((fcx-9)|0,(baseY-10)|0,4,4); ctx.fillStyle=OL; ctx.fillRect((fcx-7)|0,(baseY-2)|0,2,3); ctx.fillRect((fcx+5)|0,(baseY-2)|0,2,3); } }
+  function drawCasa(time){
+    ctx.fillStyle='#120d0a'; ctx.fillRect(0,0,VW,VH);
+    ctx.fillStyle='#8a6f52'; ctx.fillRect(0,0,VW,2*TS); ctx.fillStyle='#7a6246'; for(let x=0;x<VW;x+=8) ctx.fillRect(x,0,1,2*TS); ctx.fillStyle=OL; ctx.fillRect(0,2*TS-2,VW,2); // parede+papel
+    for(let y=2*TS;y<17*TS;y+=TS) for(let x=TS;x<27*TS;x+=TS){ const o=hash(x,y); ctx.fillStyle=['#9a6e42','#a4764a','#946a40'][o%3]; ctx.fillRect(x,y,16,16); ctx.fillStyle='rgba(0,0,0,.12)'; ctx.fillRect(x,y,16,1); } // chão madeira
+    ctx.fillStyle='#6f5a40'; ctx.fillRect(0,0,TS,VH); ctx.fillRect(27*TS,0,TS,VH); ctx.fillRect(0,17*TS,VW,TS); ctx.fillStyle=OL; ctx.fillRect(TS-2,0,2,VH); ctx.fillRect(27*TS,0,2,VH); ctx.fillRect(0,17*TS,VW,2); // paredes
+    ctx.fillStyle='#8a3b2e'; ctx.fillRect(9*TS,9*TS,10*TS,5*TS); ctx.fillStyle='#a4513c'; ctx.fillRect(9*TS+3,9*TS+3,10*TS-6,5*TS-6); // tapete
+    { const wx=4*TS,wy=0.4*TS,ww=4*TS,wh=1.3*TS; ctx.fillStyle=OL; ctx.fillRect(wx-2,wy-2,ww+4,wh+4); const g=ctx.createLinearGradient(wx,wy,wx,wy+wh); g.addColorStop(0,'#f6c37a'); g.addColorStop(1,'#b5705a'); ctx.fillStyle=g; ctx.fillRect(wx,wy,ww,wh); ctx.fillStyle=OL; ctx.fillRect(wx+ww/2-1,wy,2,wh); ctx.fillRect(wx,wy+wh/2-1,ww,2); } // janela
+    [[17,0.5,'#2e5fa3'],[20,0.4,'#2e7d4f'],[23,0.6,'#8a3b2e']].forEach(([tx,ty,c])=>{ const x=tx*TS,y=ty*TS; ctx.fillStyle='#3a2a1c'; ctx.fillRect(x,y,14,12); ctx.fillStyle=c; ctx.fillRect(x+2,y+2,10,8); ctx.fillStyle=shade(c,1.3); ctx.fillRect(x+3,y+3,4,3); }); // quadros
+    drawSofa(2*TS,8*TS); drawMesa(13*TS,6*TS); drawTV(12*TS,1*TS,time); drawDog(time); drawPlayer(time);
+    { const dx=13*TS,dy=16*TS; ctx.fillStyle=OL; ctx.fillRect(dx-1,dy-1,2*TS+2,TS+2); ctx.fillStyle='#5d3b24'; ctx.fillRect(dx,dy,2*TS,TS); ctx.fillStyle='#4a2f1d'; ctx.fillRect(dx+2,dy+2,2*TS-4,TS-2); ctx.fillStyle='#d6a94a'; ctx.fillRect(dx+2*TS-6,dy+TS/2,2,2); ctx.fillStyle='#7a6a4a'; ctx.fillRect(dx+3,dy+TS-2,2*TS-6,3); } // porta+capacho
+    ctx.globalCompositeOperation='multiply'; ctx.globalAlpha=.22; ctx.fillStyle='#caa060'; ctx.fillRect(0,0,VW,VH); ctx.globalAlpha=1;
+    ctx.globalCompositeOperation='lighter'; let tv=ctx.createRadialGradient(14*TS,3*TS,4,14*TS,3*TS,70); tv.addColorStop(0,'rgba(120,150,200,'+(0.12+0.05*Math.sin(time/120))+')'); tv.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=tv; ctx.fillRect(14*TS-70,3*TS-70,140,140);
+    ctx.globalCompositeOperation='source-over'; let vg=ctx.createRadialGradient(VW/2,VH/2,VH*.4,VW/2,VH/2,VH*.9); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(20,12,28,.5)'); ctx.fillStyle=vg; ctx.fillRect(0,0,VW,VH);
+    if(!paused){ const ft=(player.y+16)/TS|0, fx=(player.x+8)/TS|0; if(ft>=13&&fx>=11&&fx<=16){ ctx.fillStyle='#edc63a'; ctx.font='bold 8px monospace'; ctx.textAlign='center'; ctx.fillText('↓ SAIR DE CASA', 14*TS, 15.4*TS); ctx.textAlign='left'; } }
+  }
   function draw(time){
+    if(scene==='casa'){ drawCasa(time); return; }
     cam.x=Math.max(0,Math.min(MW*TS-VW,(player.x+8-VW/2)|0));
     cam.y=Math.max(0,Math.min(MH*TS-VH,(player.y+8-VH/2)|0));
     ctx.save(); ctx.translate(-cam.x,-cam.y);
@@ -573,6 +653,9 @@
       else if(e.type==='car'){ const fcx=e.tx*TS+(e.fw*TS)/2, baseY=(e.ty+e.fh)*TS;
         ctx.fillStyle='rgba(18,12,28,.34)'; ctx.beginPath(); ctx.ellipse(fcx,baseY-2,(e.fw*TS)*0.46,5,0,0,6.3); ctx.fill();
         if(carReady[e.model]){ const cim=carImg[e.model], dw=e.fw*TS+4, dh=Math.round(cim.height*dw/cim.width); ctx.drawImage(cim,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh); } }
+      else if(e.type==='phone'){ const fcx=e.tx*TS+8, baseY=(e.ty+1)*TS;
+        ctx.fillStyle='rgba(18,12,28,.3)'; ctx.beginPath(); ctx.ellipse(fcx,baseY-1,7,4,0,0,6.3); ctx.fill();
+        if(phoneReady){ const dw=phoneImg.width, dh=phoneImg.height; ctx.drawImage(phoneImg,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh); } }
       else if(e.type==='npc'){ drawActor(e,time); if(e.act&&!found[e.act]){ const mx=e.tx*TS+6, my=(e.ty+1)*TS-40+Math.round(Math.sin(time/250)); ctx.fillStyle=OL; ctx.fillRect(mx-1,my-1,6,9); ctx.fillStyle='#edc63a'; ctx.fillRect(mx,my,4,6); ctx.fillRect(mx,my+7,4,2);} }
     }
     drawParts();
@@ -592,6 +675,7 @@
   }
 
   function update(dt,time){
+    if(scene==='casa'){ updateCasa(dt,time); return; }
     jeep.x-=jeep.speed*dt*0.06; if(jeep.x<-jeep.w-8) jeep.x=MW*TS+8;
     updateWalkers(dt); updateBirds(dt);
     for(const a of [player,...npcs]){ a.closing>0?(a.closing-=dt):(a.blinkT-=dt); if(a.blinkT<=0){ a.closing=130; a.blinkT=1800+Math.random()*3200; } }
