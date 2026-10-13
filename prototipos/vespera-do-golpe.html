@@ -428,8 +428,13 @@
   CAR_MODELS.forEach(m=>{ const img=new Image(); carReady[m]=false;
     img.onload=()=>{ carReady[m]=true; }; img.src=`../assets/objs/car_${m}.png`; carImg[m]=img; });
 
-  // ---- TELEFONE PÚBLICO de época (PixelLab) ----
-  const phoneImg=new Image(); let phoneReady=false; phoneImg.onload=()=>{ phoneReady=true; }; phoneImg.src='../assets/objs/phone.png';
+  // ---- TELEFONE PÚBLICO DE PAREDE de época (PixelLab) ----
+  const phoneImg=new Image(); let phoneReady=false; phoneImg.onload=()=>{ phoneReady=true; }; phoneImg.src='../assets/objs/phone_wall.png';
+
+  // ---- MÓVEIS DO INTERIOR (PixelLab) ----
+  const FURN_KEYS=['geladeira','fogao','mesa','sofa','poltrona','cristaleira','radio','abajur'];
+  const furnImg={}; const furnReady={};
+  FURN_KEYS.forEach(k=>{ const img=new Image(); furnReady[k]=false; img.onload=()=>{ furnReady[k]=true; }; img.src=`../assets/objs/furn_${k}.png`; furnImg[k]=img; });
 
   const SPD=1.2;
   function blocked(px,py){ const bx=px+3,by=py+16,bw=10,bh=4,c=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
@@ -566,8 +571,15 @@
   const cam={x:0,y:0};
   // ======================= CENA: CASA (interior) =======================
   let scene='casa';
-  const casaSolids=[[2,8,3,2],[12,2,3,1],[13,6,2,1]]; // sofá, TV, mesinha (tx,ty,w,h)
-  const dog={x:6*TS,y:12*TS,dir:'right',animT:0,path:[[5,12],[21,12],[21,7],[6,7]].map(([a,b])=>({x:a*TS,y:b*TS})),wp:1,spd:0.32};
+  // móveis do interior: {k, cx (centro px), by (base px)}
+  const casaFurn=[
+    {k:'geladeira',  cx:2.9*TS, by:5*TS},   {k:'fogao',     cx:5.0*TS, by:5*TS},
+    {k:'cristaleira',cx:8.5*TS, by:4*TS},   {k:'mesa',      cx:5.5*TS, by:12.6*TS},
+    {k:'radio',      cx:18*TS,  by:4*TS},   {k:'sofa',      cx:18*TS,  by:12*TS},
+    {k:'poltrona',   cx:22.5*TS,by:11*TS},  {k:'abajur',    cx:24.6*TS,by:7.6*TS},
+  ];
+  const casaSolids=[ [2,3,2,2],[4,3,2,2],[7,2,2,2], [3,10,4,2], [17,2,2,2], [16,10,4,2],[21,9,2,2], [12,1,3,1] ]; // geladeira,fogão,cristaleira,mesa,rádio,sofá,poltrona,TV
+  const dog={x:11*TS,y:13*TS,dir:'right',animT:0,path:[[11,13],[20,13],[20,7],[11,7]].map(([a,b])=>({x:a*TS,y:b*TS})),wp:1,spd:0.32};
   function blockedCasa(px,py){ const bx=px+3,by=py+16,bw=10,bh=4,cs=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
     for(const[cx,cy] of cs){ const tx=cx/TS|0, ty=cy/TS|0, door=(tx>=13&&tx<=14);
       if(tx<1||tx>26||ty<1) return true;
@@ -610,14 +622,24 @@
     ctx.fillStyle='#8a6f52'; ctx.fillRect(0,0,VW,2*TS); ctx.fillStyle='#7a6246'; for(let x=0;x<VW;x+=8) ctx.fillRect(x,0,1,2*TS); ctx.fillStyle=OL; ctx.fillRect(0,2*TS-2,VW,2); // parede+papel
     for(let y=2*TS;y<17*TS;y+=TS) for(let x=TS;x<27*TS;x+=TS){ const o=hash(x,y); ctx.fillStyle=['#9a6e42','#a4764a','#946a40'][o%3]; ctx.fillRect(x,y,16,16); ctx.fillStyle='rgba(0,0,0,.12)'; ctx.fillRect(x,y,16,1); } // chão madeira
     ctx.fillStyle='#6f5a40'; ctx.fillRect(0,0,TS,VH); ctx.fillRect(27*TS,0,TS,VH); ctx.fillRect(0,17*TS,VW,TS); ctx.fillStyle=OL; ctx.fillRect(TS-2,0,2,VH); ctx.fillRect(27*TS,0,2,VH); ctx.fillRect(0,17*TS,VW,2); // paredes
-    ctx.fillStyle='#8a3b2e'; ctx.fillRect(9*TS,9*TS,10*TS,5*TS); ctx.fillStyle='#a4513c'; ctx.fillRect(9*TS+3,9*TS+3,10*TS-6,5*TS-6); // tapete
-    { const wx=4*TS,wy=0.4*TS,ww=4*TS,wh=1.3*TS; ctx.fillStyle=OL; ctx.fillRect(wx-2,wy-2,ww+4,wh+4); const g=ctx.createLinearGradient(wx,wy,wx,wy+wh); g.addColorStop(0,'#f6c37a'); g.addColorStop(1,'#b5705a'); ctx.fillStyle=g; ctx.fillRect(wx,wy,ww,wh); ctx.fillStyle=OL; ctx.fillRect(wx+ww/2-1,wy,2,wh); ctx.fillRect(wx,wy+wh/2-1,ww,2); } // janela
-    [[17,0.5,'#2e5fa3'],[20,0.4,'#2e7d4f'],[23,0.6,'#8a3b2e']].forEach(([tx,ty,c])=>{ const x=tx*TS,y=ty*TS; ctx.fillStyle='#3a2a1c'; ctx.fillRect(x,y,14,12); ctx.fillStyle=c; ctx.fillRect(x+2,y+2,10,8); ctx.fillStyle=shade(c,1.3); ctx.fillRect(x+3,y+3,4,3); }); // quadros
-    drawSofa(2*TS,8*TS); drawMesa(13*TS,6*TS); drawTV(12*TS,1*TS,time); drawDog(time); drawPlayer(time);
+    ctx.fillStyle='#8a3b2e'; ctx.fillRect(15*TS,9*TS,9*TS,5*TS); ctx.fillStyle='#a4513c'; ctx.fillRect(15*TS+3,9*TS+3,9*TS-6,5*TS-6); // tapete (sala)
+    { const wx=20*TS,wy=0.3*TS,ww=4*TS,wh=1.4*TS; ctx.fillStyle=OL; ctx.fillRect(wx-2,wy-2,ww+4,wh+4); const g=ctx.createLinearGradient(wx,wy,wx,wy+wh); g.addColorStop(0,'#f6c37a'); g.addColorStop(1,'#b5705a'); ctx.fillStyle=g; ctx.fillRect(wx,wy,ww,wh); ctx.fillStyle=OL; ctx.fillRect(wx+ww/2-1,wy,2,wh); ctx.fillRect(wx,wy+wh/2-1,ww,2);
+      ctx.fillStyle='#9a3b2e'; ctx.fillRect(wx-3,wy-2,5,wh+4); ctx.fillRect(wx+ww-2,wy-2,5,wh+4); ctx.fillStyle='#8a3b2e'; ctx.fillRect(wx-4,wy-3,ww+8,2); } // janela + cortinas
+    [[10.3,0.4,'#2e5fa3',0],[15.3,0.35,'#caa060',1],[24.3,0.45,'#2e7d4f',0]].forEach(([tx,ty,c,santo])=>{ const x=tx*TS,y=ty*TS; ctx.fillStyle='#3a2a1c'; ctx.fillRect(x,y,14,12); ctx.fillStyle=c; ctx.fillRect(x+2,y+2,10,8);
+      if(santo){ ctx.fillStyle='#f2e6c0'; ctx.fillRect(x+5,y+5,4,5); ctx.fillStyle='#e8c84a'; ctx.fillRect(x+5,y+3,4,1); ctx.fillRect(x+4,y+4,1,1); ctx.fillRect(x+9,y+4,1,1); } else { ctx.fillStyle=shade(c,1.3); ctx.fillRect(x+3,y+3,4,3); } }); // quadros + santo
+    const items=[]; // y-sort: móveis + TV + cachorro + jogador
+    for(const f of casaFurn){ if(furnReady[f.k]){ const im=furnImg[f.k], ix=(f.cx-im.width/2)|0, iy=(f.by-im.height)|0; items.push({by:f.by, fn:()=>ctx.drawImage(im,ix,iy)}); } }
+    items.push({by:3*TS, fn:()=>drawTV(12*TS,1*TS,time)});
+    items.push({by:dog.y+16, fn:()=>drawDog(time)});
+    items.push({by:player.y+16, fn:()=>drawPlayer(time)});
+    items.sort((a,b)=>a.by-b.by); for(const it of items) it.fn();
     { const dx=13*TS,dy=16*TS; ctx.fillStyle=OL; ctx.fillRect(dx-1,dy-1,2*TS+2,TS+2); ctx.fillStyle='#5d3b24'; ctx.fillRect(dx,dy,2*TS,TS); ctx.fillStyle='#4a2f1d'; ctx.fillRect(dx+2,dy+2,2*TS-4,TS-2); ctx.fillStyle='#d6a94a'; ctx.fillRect(dx+2*TS-6,dy+TS/2,2,2); ctx.fillStyle='#7a6a4a'; ctx.fillRect(dx+3,dy+TS-2,2*TS-6,3); } // porta+capacho
     ctx.globalCompositeOperation='multiply'; ctx.globalAlpha=.22; ctx.fillStyle='#caa060'; ctx.fillRect(0,0,VW,VH); ctx.globalAlpha=1;
-    ctx.globalCompositeOperation='lighter'; let tv=ctx.createRadialGradient(14*TS,3*TS,4,14*TS,3*TS,70); tv.addColorStop(0,'rgba(120,150,200,'+(0.12+0.05*Math.sin(time/120))+')'); tv.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=tv; ctx.fillRect(14*TS-70,3*TS-70,140,140);
+    ctx.globalCompositeOperation='lighter';
+    let tv=ctx.createRadialGradient(14*TS,3*TS,4,14*TS,3*TS,70); tv.addColorStop(0,'rgba(120,150,200,'+(0.12+0.05*Math.sin(time/120))+')'); tv.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=tv; ctx.fillRect(14*TS-70,3*TS-70,140,140);
+    let ab=ctx.createRadialGradient(24.6*TS,6.6*TS,2,24.6*TS,6.6*TS,42); ab.addColorStop(0,'rgba(255,205,120,.5)'); ab.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=ab; ctx.fillRect(24.6*TS-42,6.6*TS-42,84,84);
     ctx.globalCompositeOperation='source-over'; let vg=ctx.createRadialGradient(VW/2,VH/2,VH*.4,VW/2,VH/2,VH*.9); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(20,12,28,.5)'); ctx.fillStyle=vg; ctx.fillRect(0,0,VW,VH);
+    { const rx=18*TS, ry=2.2*TS, ph=(time/260|0)%3; ctx.strokeStyle='rgba(255,220,150,.7)'; ctx.lineWidth=1; for(let i=0;i<3;i++){ if((ph+i)%3) continue; ctx.beginPath(); ctx.arc(rx,ry,3+i*3,-1.1,0.3); ctx.stroke(); } } // ondas do rádio (notícias)
     if(!paused){ const ft=(player.y+16)/TS|0, fx=(player.x+8)/TS|0; if(ft>=13&&fx>=11&&fx<=16){ ctx.fillStyle='#edc63a'; ctx.font='bold 8px monospace'; ctx.textAlign='center'; ctx.fillText('↓ SAIR DE CASA', 14*TS, 15.4*TS); ctx.textAlign='left'; } }
   }
   function draw(time){
@@ -654,8 +676,9 @@
         ctx.fillStyle='rgba(18,12,28,.34)'; ctx.beginPath(); ctx.ellipse(fcx,baseY-2,(e.fw*TS)*0.46,5,0,0,6.3); ctx.fill();
         if(carReady[e.model]){ const cim=carImg[e.model], dw=e.fw*TS+4, dh=Math.round(cim.height*dw/cim.width); ctx.drawImage(cim,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh); } }
       else if(e.type==='phone'){ const fcx=e.tx*TS+8, baseY=(e.ty+1)*TS;
-        ctx.fillStyle='rgba(18,12,28,.3)'; ctx.beginPath(); ctx.ellipse(fcx,baseY-1,7,4,0,0,6.3); ctx.fill();
-        if(phoneReady){ const dw=phoneImg.width, dh=phoneImg.height; ctx.drawImage(phoneImg,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh); } }
+        ctx.fillStyle='rgba(18,12,28,.3)'; ctx.beginPath(); ctx.ellipse(fcx,baseY-1,6,3,0,0,6.3); ctx.fill();
+        ctx.fillStyle=OL; ctx.fillRect((fcx-2)|0,(baseY-26)|0,4,26); ctx.fillStyle='#8a847a'; ctx.fillRect((fcx-1)|0,(baseY-26)|0,2,26); // poste
+        if(phoneReady){ const dw=phoneImg.width, dh=phoneImg.height; ctx.drawImage(phoneImg,(fcx-dw/2)|0,(baseY-22-dh)|0,dw,dh); } } // caixa de parede no topo
       else if(e.type==='npc'){ drawActor(e,time); if(e.act&&!found[e.act]){ const mx=e.tx*TS+6, my=(e.ty+1)*TS-40+Math.round(Math.sin(time/250)); ctx.fillStyle=OL; ctx.fillRect(mx-1,my-1,6,9); ctx.fillStyle='#edc63a'; ctx.fillRect(mx,my,4,6); ctx.fillRect(mx,my+7,4,2);} }
     }
     drawParts();

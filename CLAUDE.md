@@ -62,13 +62,23 @@ pra usar tilesets/spritesheets de imagem (ex.: Kenney.nl), ou migrar pra **Godot
 
 ## Roadmap (um mapa por fase, mesmo personagem envelhecendo)
 
-1. **Véspera do golpe** (30/03/1964) — prólogo ✅ protótipo
+> **Mapa principal / hub:** a cidade viva de `vespera-do-golpe.html` passou a ser o **hub
+> do jogo** — o lugar de onde se parte. O jogador começa **dentro de casa**, sai pra rua e
+> circula pela cidade. Os demais capítulos históricos abaixo serão **mapas acessados a
+> partir do hub** (por pontos de saída: uma esquina, a estrada, a estação — reservar 1–2
+> desses lugares no layout mesmo antes de ligá-los).
+
+1. **Véspera do golpe** (30/03/1964) — prólogo / **hub** ✅ protótipo
 2. **1964 — a praça ocupada** ✅ primeira versão
 3. **1968 — o AI-5**
 4. **Anos de chumbo** (perseguição, stealth)
 5. **Milagre e censura**
 6. **Resistência e exílio** (ramifica finais)
 7. **Diretas Já → 1985 — o fim**
+
+**Ritmo de quarteirão (identidade de cidade):** pensar a cidade em quarteirões —
+rua → **calçada portuguesa** → **muro com portão** → quintal → casa. Esse ritmo repetido
+é o que faz parecer cidade de verdade, não casas soltas na grama.
 
 ## Cuidado com o tema
 
@@ -83,17 +93,23 @@ O mapa tem que "cheirar" a Brasil de 1964. Referências concretas pra usar:
 - **Calçada portuguesa** (pedras pretas e brancas em ondas/mosaico) — é a assinatura
   visual mais brasileira que existe. Usar nas calçadas e praças.
 - **Arquitetura:** sobrados coloniais com janelas de veneziana e sacada de ferro,
-  casinhas geminadas, prédios art déco baixos, muros caiados, igreja barroca.
+  casinhas geminadas, prédios art déco baixos, igreja barroca.
+- **Muros (identidade anos 60):** **muro caiado branco** (às vezes com grade de ferro em
+  cima) e, principalmente, **cobogó** (bloco vazado de concreto) — o maior "cheiro de
+  época" que existe. Usar em muros e muretas, com **portão de ferro** virado pra calçada.
 - **Veículos de época:** Fusca, Kombi, DKW-Vemag, Aero Willys, ônibus/“circular” antigo,
   bonde (em cidade grande). O blindado/tanque e o jipe do Exército para a tensão.
 - **Letreiros esmaltados e placas pintadas à mão:** BAR, BOTEQUIM, PADARIA, FARMÁCIA,
   ARMARINHO, CINE (marquise), BONDE. Tipografia da época, cores saturadas e gastas.
-- **Objetos de rua:** poste de concreto com fios, orelhão ainda NÃO (só pós-1972) → usar
-  telefone público de parede/poste; banca de jornal; caixa de correio; lixeira; toldos
+- **Objetos de rua:** poste de concreto com fios, **orelhão ainda NÃO (só pós-1972)** →
+  usar **telefone público DE PAREDE** da época (caixa metálica com fone no gancho), fixado
+  num poste ou na parede de uma casa; banca de jornal; caixa de correio; lixeira; toldos
   listrados; varal de roupa entre janelas; vasos e trepadeiras.
 - **Natureza:** ipê, flamboyant, mangueira, bananeira — folhagem tropical, não pinheiro.
 - **Pessoas:** homens de terno e chapéu, operários de camisa, mulheres de vestido rodado,
-  crianças descalças. Jornais da época (Última Hora, O Globo, Correio da Manhã).
+  senhores idosos, e **crianças** (menino de bermuda, menina de vestidinho — brincando
+  perto da praça). **Variar** pele, cabelo e roupa pra ninguém ficar igual ao vizinho.
+  Jornais da época (Última Hora, O Globo, Correio da Manhã).
 - **Paleta:** terrosos quentes, ocre, telha, verde-oliva, azul desbotado; luz de fim de
   tarde (golden hour) já implementada.
 
