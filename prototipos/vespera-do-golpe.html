@@ -286,11 +286,11 @@
   function npc(tx,ty,col,dir,act){ const e=add({type:'npc',tx,ty,fw:1,fh:1,col,dir,act,sheet:buildChar(col),animT:0,phase:Math.random()*6,blinkT:1500+Math.random()*3000,closing:0,moving:false}); npcs.push(e); return e; }
 
   const defs=[
-    {type:'house',tx:3,ty:9,fw:5,fh:2,roof:'#9a4a2e',wall:'#b7795a',lit:true,chimney:true,gen:genHouse},
-    {type:'house',tx:12,ty:9,fw:5,fh:2,roof:'#5a6a3a',wall:'#c3a37a',antenna:true,gen:genHouse},
-    {type:'house',tx:22,ty:8,fw:4,fh:2,roof:'#7a5230',wall:'#b78a5a',chimney:true,antenna:true,gen:genHouse},
-    {type:'house',tx:30,ty:9,fw:5,fh:2,roof:'#8a4a3a',wall:'#c0a070',lit:true,chimney:true,gen:genHouse},
-    {type:'house',tx:3,ty:21,fw:5,fh:2,roof:'#8a5a2e',wall:'#b78a4a',lit:true,bar:true,chimney:true,gen:genHouse},
+    {type:'house',tx:3,ty:9,fw:5,fh:2,roof:'#9a4a2e',wall:'#b7795a',lit:true,chimney:true,model:'sobrado',gen:genHouse},
+    {type:'house',tx:12,ty:9,fw:5,fh:2,roof:'#5a6a3a',wall:'#c3a37a',antenna:true,model:'geminada',gen:genHouse},
+    {type:'house',tx:22,ty:8,fw:4,fh:2,roof:'#7a5230',wall:'#b78a5a',chimney:true,antenna:true,model:'artdeco',gen:genHouse},
+    {type:'house',tx:30,ty:9,fw:5,fh:2,roof:'#8a4a3a',wall:'#c0a070',lit:true,chimney:true,model:'sobrado',gen:genHouse},
+    {type:'house',tx:3,ty:21,fw:5,fh:2,roof:'#8a5a2e',wall:'#b78a4a',lit:true,bar:true,chimney:true,model:'artdeco',gen:genHouse},
     {type:'church',tx:29,ty:21,fw:5,fh:3,gen:genChurch},
     {type:'kiosk',tx:24,ty:13,fw:2,fh:1,gen:genKiosk},
     {type:'radio',tx:5,ty:11,fw:1,fh:1,solid:false,gen:genRadio},
@@ -369,6 +369,14 @@
       img.src=`../assets/chars/${kind}_${dir}_${f}.png`;
       npcImgSheets[kind][dir].push(img); } });
   });
+
+  // ---- SPRITES DE CASA (PixelLab) ----
+  // Modelos variados (house_<model>.png em assets/objs/). Carrega em segundo plano;
+  // enquanto o PNG não existir, o desenho cai no sprite procedural genHouse (fallback).
+  const HOUSE_MODELS=['sobrado','geminada','artdeco'];
+  const houseImg={}; const houseReady={};
+  HOUSE_MODELS.forEach(m=>{ const img=new Image(); houseReady[m]=false;
+    img.onload=()=>{ houseReady[m]=true; }; img.src=`../assets/objs/house_${m}.png`; houseImg[m]=img; });
 
   const SPD=1.2;
   function blocked(px,py){ const bx=px+3,by=py+16,bw=10,bh=4,c=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
@@ -493,7 +501,11 @@
       else if(e.__j){ drawTank(time); }
       else if(e.spr){ const fcx=e.tx*TS+(e.fw*TS)/2, baseY=(e.ty+e.fh)*TS;
         if(e.type==='tree'||e.type==='house'||e.type==='church'||e.type==='phone'||e.type==='lamp') shadow(fcx,baseY, e.spr.w*0.4);
-        blit(e.spr,fcx,baseY);
+        if(e.type==='house' && houseReady[e.model]){
+          const him=houseImg[e.model], dw=e.fw*TS+8, dh=Math.round(him.height*dw/him.width);
+          ctx.drawImage(him,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh);
+          if(e.bar){ const by=(baseY-dh*0.5)|0; ctx.fillStyle=OL; ctx.fillRect((fcx-11)|0,by,22,9); ctx.fillStyle='#f0c04a'; ctx.font='7px monospace'; ctx.textAlign='center'; ctx.fillText('BAR',fcx,by+7); ctx.textAlign='left'; }
+        } else blit(e.spr,fcx,baseY);
         if(e.water){ const wob=Math.sin(time/300); ctx.fillStyle='#8fc0dc'; ctx.fillRect((fcx-6)|0,(baseY-e.spr.h+9+wob)|0,12,2); }
         if(e.type==='radio'){ const ph=(time/260|0)%3; ctx.strokeStyle='rgba(255,220,150,.85)'; ctx.lineWidth=1; const rx=e.tx*TS+9, ry=(e.ty+1)*TS-14; for(let i=0;i<3;i++){ if((ph+i)%3) continue; ctx.beginPath(); ctx.arc(rx,ry,3+i*3,-1.1,0.3); ctx.stroke(); } }
         if(e.type==='npc'){}
