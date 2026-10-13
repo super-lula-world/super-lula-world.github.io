@@ -71,3 +71,54 @@ pra usar tilesets/spritesheets de imagem (ex.: Kenney.nl), ou migrar pra **Godot
 É um jogo sobre um período real e traumático (presos, mortos, desaparecidos, tortura,
 censura). Manter **rigor histórico** e **respeito**: mostrar pela perspectiva de quem
 sofre e resiste, nunca glamourizar o regime. Desafios de **tensão**, não de punição.
+
+## Direção de arte — Brasil, início dos anos 1960
+
+O mapa tem que "cheirar" a Brasil de 1964. Referências concretas pra usar:
+
+- **Calçada portuguesa** (pedras pretas e brancas em ondas/mosaico) — é a assinatura
+  visual mais brasileira que existe. Usar nas calçadas e praças.
+- **Arquitetura:** sobrados coloniais com janelas de veneziana e sacada de ferro,
+  casinhas geminadas, prédios art déco baixos, muros caiados, igreja barroca.
+- **Veículos de época:** Fusca, Kombi, DKW-Vemag, Aero Willys, ônibus/“circular” antigo,
+  bonde (em cidade grande). O blindado/tanque e o jipe do Exército para a tensão.
+- **Letreiros esmaltados e placas pintadas à mão:** BAR, BOTEQUIM, PADARIA, FARMÁCIA,
+  ARMARINHO, CINE (marquise), BONDE. Tipografia da época, cores saturadas e gastas.
+- **Objetos de rua:** poste de concreto com fios, orelhão ainda NÃO (só pós-1972) → usar
+  telefone público de parede/poste; banca de jornal; caixa de correio; lixeira; toldos
+  listrados; varal de roupa entre janelas; vasos e trepadeiras.
+- **Natureza:** ipê, flamboyant, mangueira, bananeira — folhagem tropical, não pinheiro.
+- **Pessoas:** homens de terno e chapéu, operários de camisa, mulheres de vestido rodado,
+  crianças descalças. Jornais da época (Última Hora, O Globo, Correio da Manhã).
+- **Paleta:** terrosos quentes, ocre, telha, verde-oliva, azul desbotado; luz de fim de
+  tarde (golden hour) já implementada.
+
+## Pipeline de arte (PixelLab → jogo)
+
+Agora que rodamos localmente, PODEMOS usar imagens (o Artifact não deixava). Plano:
+
+1. Gerar sprites no **PixelLab** (MCP já conectado) e salvar em `assets/` (subpastas:
+   `assets/chars/`, `assets/objs/`, `assets/tiles/`).
+2. Carregar com `new Image()` + um pequeno **loader** que espera tudo carregar antes de
+   iniciar o jogo; desenhar com `ctx.drawImage`, mantendo `imageSmoothingEnabled=false`.
+3. Substituir os desenhos procedurais **um de cada vez** (primeiro o jogador, depois NPCs,
+   depois objetos, por fim tiles), comparando antes/depois.
+4. Spritesheets de personagem: 4 direções × 4 frames de caminhada, idle à parte.
+   Tamanho sugerido: múltiplos de 16 (ex.: char 32×32 ou 32×48; tiles 16×16 ou 32×32).
+
+Consistência visual no PixelLab: repetir sempre o mesmo estilo no prompt, ex.:
+*"16-bit SNES pixel art, top-down 3/4 view, bold dark outline, warm 1960s palette,
+limited palette, flat shading"*.
+
+## Próximos passos (fazer em ordem, um por vez)
+
+- **Fase A — Pipeline:** criar `assets/` + loader de imagens e trocar UM sprite (o jogador)
+  por arte do PixelLab, pra validar o fluxo ponta a ponta.
+- **Fase B — Definição:** substituir NPCs e objetos-chave (tanque, casas, árvores) por
+  sprites do PixelLab; aumentar nº de frames.
+- **Fase C — Movimento/vida:** NPCs que andam em trajetos, varal/bandeira balançando,
+  pássaros, cão de rua, luzes piscando, mais partículas.
+- **Fase D — Brasil 1964:** vestir o mapa com calçada portuguesa, Fusca/Kombi, letreiros
+  esmaltados, postes com fios, folhagem tropical.
+- **Fase E — Imersão:** transição dia→noite, (opcional) som ambiente de rádio/rua,
+  diálogos com retrato do personagem.
