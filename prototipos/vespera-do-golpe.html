@@ -102,9 +102,12 @@
   // ===================== MAPA =====================
   const g=[]; for(let y=0;y<MH;y++) g.push(new Array(MW).fill('g'));
   function rect(x0,y0,x1,y1,ch){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(g[y]&&x<MW) g[y][x]=ch; }
-  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) if(hash(x,y)%7===0) g[y][x]='G';
-  rect(0,14,MW-1,16,'r'); rect(0,13,MW-1,13,'c'); rect(0,17,MW-1,17,'c');
-  rect(13,20,20,25,'s'); rect(16,17,16,19,'p'); rect(23,17,23,20,'p'); rect(6,17,6,20,'p');
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) if(hash(x,y)%12===0) g[y][x]='G'; // poucas flores (grama quieta)
+  // CRUZ de ruas: principal (rows 13–15) + transversal (cols 18–20); calçada portuguesa dos dois lados
+  rect(0,12,MW-1,12,'c'); rect(0,16,MW-1,16,'c');   // calçada N/S da rua principal
+  rect(17,0,17,MH-1,'c'); rect(21,0,21,MH-1,'c');   // calçada L/O da transversal
+  rect(0,13,MW-1,15,'r'); rect(18,0,20,MH-1,'r');   // ruas (cortam a calçada na interseção)
+  rect(22,17,38,27,'c');                             // PRAÇA (SE): piso de calçada portuguesa
 
   const solid=[]; for(let y=0;y<MH;y++) solid.push(new Array(MW).fill(false));
   const addSolid=(x,y,w,h)=>{ for(let j=0;j<h;j++) for(let i=0;i<w;i++) if(g[y+j]&&x+i<MW) solid[y+j][x+i]=true; };
@@ -309,54 +312,56 @@
     npcs.push(e); return e; }
 
   const defs=[
-    {type:'house',tx:3,ty:9,fw:5,fh:2,roof:'#9a4a2e',wall:'#b7795a',lit:true,chimney:true,model:'sobrado',gen:genHouse},
-    {type:'house',tx:12,ty:9,fw:5,fh:2,roof:'#5a6a3a',wall:'#c3a37a',antenna:true,model:'geminada',sign:'PADARIA',signCol:'#2e5fa3',gen:genHouse},
-    {type:'house',tx:22,ty:8,fw:4,fh:2,roof:'#7a5230',wall:'#b78a5a',chimney:true,antenna:true,model:'artdeco',sign:'FARMÁCIA',signCol:'#2e7d4f',gen:genHouse},
-    {type:'house',tx:30,ty:9,fw:5,fh:2,roof:'#8a4a3a',wall:'#c0a070',lit:true,chimney:true,model:'sobrado',gen:genHouse},
-    {type:'house',tx:3,ty:21,fw:5,fh:2,roof:'#8a5a2e',wall:'#b78a4a',lit:true,bar:true,chimney:true,model:'artdeco',gen:genHouse},
-    {type:'church',tx:29,ty:21,fw:5,fh:3,gen:genChurch},
-    {type:'kiosk',tx:24,ty:13,fw:2,fh:1,gen:genKiosk},
-    {type:'radio',tx:5,ty:11,fw:1,fh:1,solid:false,gen:genRadio},
-    {type:'phone',tx:21,ty:18,fw:1,fh:2,gen:genPhone},
-    {type:'poster',tx:10,ty:18,fw:1,fh:1,solid:false,kind:0,gen:genPoster},
-    {type:'poster',tx:27,ty:17,fw:1,fh:1,solid:false,kind:1,gen:genPoster},
-    {type:'fountain',tx:16,ty:21,fw:2,fh:2,gen:genFountain},
-    {type:'bench',tx:14,ty:23,fw:1,fh:1,gen:genBench},{type:'bench',tx:19,ty:23,fw:1,fh:1,gen:genBench},
-    {type:'table',tx:3,ty:24,fw:1,fh:1,solid:false,gen:genTable},{type:'table',tx:6,ty:24,fw:1,fh:1,solid:false,gen:genTable},
+    // CASAS (recuadas, com muro+portão+quintal)
+    {type:'house',tx:1, ty:6, fw:5,fh:2, model:'sobrado', lit:true, chimney:true, roof:'#9a4a2e',wall:'#b7795a', gen:genHouse}, // NO sobrado
+    {type:'house',tx:10,ty:5, fw:5,fh:2, model:'geminada', antenna:true,          roof:'#5a6a3a',wall:'#c3a37a', gen:genHouse}, // NO casa (recuada)
+    {type:'house',tx:10,ty:22,fw:5,fh:2, model:'geminada', lit:true, chimney:true, roof:'#8a4a3a',wall:'#c0a070', gen:genHouse}, // SO casa
+    // COMÉRCIO (abre na calçada, toldo + letreiro, SEM muro/quintal)
+    {type:'house',tx:23,ty:9, fw:5,fh:2, model:'artdeco', sign:'PADARIA', signCol:'#2e5fa3', toldo:true, lit:true, roof:'#7a5230',wall:'#b78a5a', gen:genHouse}, // NE padaria
+    {type:'house',tx:30,ty:9, fw:6,fh:2, model:'artdeco', sign:'FARMÁCIA',signCol:'#2e7d4f', toldo:true,          roof:'#8a4a3a',wall:'#c0a070', gen:genHouse}, // NE farmácia
+    {type:'house',tx:1, ty:19,fw:4,fh:2, model:'artdeco', bar:true, toldo:true, lit:true,     roof:'#8a5a2e',wall:'#b78a4a', gen:genHouse}, // SO bar
+    // IGREJA + PRAÇA (SE)
+    {type:'church',tx:23,ty:22,fw:5,fh:3, gen:genChurch},
+    {type:'coreto',tx:29,ty:18,fw:3,fh:2, solid:true, gen:()=>{}},
+    {type:'bench',tx:27,ty:18,fw:1,fh:1,gen:genBench},{type:'bench',tx:34,ty:18,fw:1,fh:1,gen:genBench},
+    {type:'bench',tx:27,ty:22,fw:1,fh:1,gen:genBench},{type:'bench',tx:34,ty:22,fw:1,fh:1,gen:genBench},
+    // interações estruturais
+    {type:'radio',tx:3, ty:9, fw:1,fh:1,solid:false,gen:genRadio},
+    {type:'kiosk',tx:15,ty:11,fw:2,fh:1,gen:genKiosk},
   ];
-  for(let x=2;x<=7;x++) if(x!==5) defs.push({type:'fence',tx:x,ty:12,fw:1,fh:1,gen:genFence});
-  for(let x=11;x<=16;x++) if(x!==14) defs.push({type:'fence',tx:x,ty:12,fw:1,fh:1,gen:genFence});
+  // MUROS + PORTÕES (só nas CASAS): sobrado NO (col3), casa NO (col12), casa SO (col12)
+  function pushMuro(ty,x0,x1,gateX){ for(let x=x0;x<=x1;x++) defs.push(x===gateX?{type:'portao',tx:x,ty,fw:1,fh:1,solid:false,gen:()=>{}}:{type:'muro',tx:x,ty,fw:1,fh:1,solid:true,gen:genMuro}); }
+  pushMuro(11,1,5,3); pushMuro(11,10,14,12); pushMuro(21,10,14,12);
+  // VEGETAÇÃO: quintais + praça + rua
   const TREE_M=['tree_ipe','tree_mangueira','tree_bananeira'];
-  [[9,11],[18,11],[28,10],[36,12],[13,22],[20,21],[11,24],[25,24],[34,22]].forEach(([x,y],i)=>defs.push({type:'tree',tx:x,ty:y,fw:1,fh:1,model:TREE_M[i%3],gen:genTree}));
+  [[5,9],[13,9],[24,19],[37,21],[32,26],[2,24],[16,8]].forEach(([x,y],i)=>defs.push({type:'tree',tx:x,ty:y,fw:1,fh:1,model:TREE_M[i%3],gen:genTree}));
   const BUSH_M=['bush_flor1','bush_flor2'];
-  [[2,18],[8,18],[22,18],[33,18],[15,25],[19,25]].forEach(([x,y],i)=>defs.push({type:'bush',tx:x,ty:y,fw:1,fh:1,model:BUSH_M[i%2],gen:genBush}));
-  // VEÍCULOS PARADOS (Fusca e Kombi) — na rua, encostados nas calçadas
-  defs.push({type:'car',tx:22,ty:16,fw:4,fh:1,model:'fusca',gen:()=>{}});
-  defs.push({type:'car',tx:5,ty:14,fw:5,fh:1,model:'kombi',gen:()=>{}});
-  // MUROS caiados (divisa dos lotes) e POSTES de energia com fios
-  [[26,11,3],[8,20,7],[17,20,6]].forEach(([x,y,w])=>defs.push({type:'muro',tx:x,ty:y,fw:w,fh:1,solid:false,gen:genMuro}));
-  [[6,17],[13,17],[20,17],[27,17],[34,17]].forEach(([x,y])=>defs.push({type:'poste',tx:x,ty:y,fw:1,fh:1,solid:false,gen:genPoste}));
-  // TELEFONE público na calçada
-  defs.push({type:'phone',tx:25,ty:13,fw:1,fh:1,solid:false,gen:()=>{}});
+  [[2,10],[12,10],[12,19],[26,20],[35,24],[31,23]].forEach(([x,y],i)=>defs.push({type:'bush',tx:x,ty:y,fw:1,fh:1,model:BUSH_M[i%2],gen:genBush}));
+  // VEÍCULOS parados na rua
+  defs.push({type:'car',tx:6, ty:15,fw:4,fh:1,model:'fusca',gen:()=>{}});
+  defs.push({type:'car',tx:30,ty:13,fw:5,fh:1,model:'kombi',gen:()=>{}});
+  // POSTES (sólidos) + TELEFONE de parede
+  [[4,16],[12,16],[24,16],[32,16],[16,8],[16,21]].forEach(([x,y])=>defs.push({type:'poste',tx:x,ty:y,fw:1,fh:1,solid:true,gen:genPoste}));
+  defs.push({type:'phone',tx:16,ty:16,fw:1,fh:1,solid:false,gen:()=>{}});
   defs.forEach(d=>{ const e=add(d); d.gen(e); });
-
-  // lampiões (com luz)
-  [2,9,16,23,30,37].forEach(x=>{ const e=add({type:'lamp',tx:x,ty:13,fw:1,fh:1}); genLamp(e); addLight((x+0.5)*TS,(13-0.3)*TS,38,'rgba(255,205,120,.6)',1); });
+  // LAMPIÕES (luz piscando) nas calçadas
+  [3,10,24,31,37].forEach(x=>{ const e=add({type:'lamp',tx:x,ty:12,fw:1,fh:1}); genLamp(e); addLight((x+0.5)*TS,(12-0.3)*TS,38,'rgba(255,205,120,.6)',1); });
+  [3,10,24,31].forEach(x=>{ const e=add({type:'lamp',tx:x,ty:16,fw:1,fh:1}); genLamp(e); addLight((x+0.5)*TS,(16-0.3)*TS,34,'rgba(255,205,120,.5)',1); });
   // luzes de janela
-  addLight(3.5*16+28,9.6*16,46,'rgba(255,190,90,.5)'); addLight(33*16,9.6*16,40,'rgba(255,190,90,.42)'); addLight(5.5*16,21.6*16,46,'rgba(255,170,70,.5)'); addLight(21.5*16,18.4*16,26,'rgba(255,120,90,.4)');
-
+  addLight(3*16,8*16,46,'rgba(255,190,90,.5)'); addLight(25*16,10*16,42,'rgba(255,190,90,.45)'); addLight(2.5*16,20*16,44,'rgba(255,170,70,.5)');
   // chaminés / árvores p/ partículas
-  ents.forEach(e=>{ if(e.type==='house'&&e.chimney) chimneys.push({x:(e.tx+e.fw)*TS-10,y:(e.ty+e.fh)*TS-e.spr.h+2}); if(e.type==='tree') trees.push({x:e.tx*TS+8,y:(e.ty+1)*TS-30}); });
-
-  // NPCs
-  npc(2,24,{kind:'suit',skin:'#c98d5a',hair:'#2a1c12',shirt:'#d8cdb8',coat:'#43506a',tie:'#7a2a22',pants:'#2f3a52',shoe:'#201a14'},'right');
-  npc(7,24,{kind:'suit',skin:'#e0b07a',hair:'#4a3320',shirt:'#e6e0d0',coat:'#5a4a38',tie:'#365c4a',hat:'#4a3d2c',pants:'#3a2f22',shoe:'#241a12'},'left','bar');
-  npc(13,12,{kind:'suit',skin:'#e0ac69',hair:'#3a2a1a',shirt:'#e6e0d0',coat:'#6a7a4a',tie:'#8a3b2e',pants:'#3a4a63',shoe:'#241a12'},'right');
-  npc(15,12,{kind:'dress',skin:'#caa070',hair:'#5a3a22',shirt:'#9a3b2e',shoe:'#3a2318'},'left','vizinhos');
-  // soldado patrulhando + dois pedestres andando (Fase C)
-  walker({kind:'soldier',skin:'#c98d5a',hair:'#222',shirt:'#5c6b3a',helmet:'#48562e',pants:'#444026',shoe:'#1f1a12'},[[26,12],[37,12]],0.5);
-  walker({kind:'suit',skin:'#d8a46a',hair:'#3a2a1a',shirt:'#e6e0d0',coat:'#4a4030',tie:'#7a2a22',hat:'#3a2f22',pants:'#2f2a22',shoe:'#201a14'},[[6,17],[26,17]],0.42);
-  walker({kind:'dress',skin:'#e0b07a',hair:'#4a3320',shirt:'#5a7a9a',shoe:'#3a2318'},[[22,13],[9,13]],0.40);
+  ents.forEach(e=>{ if(e.type==='house'&&e.chimney) chimneys.push({x:(e.tx+e.fw)*TS-10,y:(e.ty+e.fh)*TS-(e.spr?e.spr.h:60)+2}); if(e.type==='tree') trees.push({x:e.tx*TS+8,y:(e.ty+1)*TS-30}); });
+  // NPCs variados (sorteio p/ ninguém repetir) + crianças na praça
+  const ADULT_KINDS=['suit','dress','soldier','operario','senhora'];
+  function col4(kind){ return {kind, skin:['#e0b07a','#caa070','#c98d5a','#e7b377'][Math.abs(hash(kind.length,kind.charCodeAt(0)))%4], hair:'#3a2a1a', shirt:'#b7795a', pants:'#3a3a44', shoe:'#201a14', coat:'#4a4030', tie:'#7a2a22', helmet:'#48562e', hat:'#3a2f22'}; }
+  npc(13,16,col4('suit'),'right'); npc(14,16,col4('operario'),'left','vizinhos'); // vizinhos (interação)
+  npc(2,16,col4('senhora'),'down','bar'); // perto do bar (interação)
+  const paths=[[[6,16],[26,16]],[[24,12],[9,12]],[[22,22],[22,26]],[[4,23],[14,23]]];
+  paths.forEach((p,i)=>walker(col4(ADULT_KINDS[(i*2+1)%5]), p, 0.40+0.04*i));
+  walker(col4('soldier'),[[24,16],[37,16]],0.5); // soldado patrulhando
+  // 2 CRIANÇAS brincando na praça
+  walker({kind:'menino',skin:'#e0b07a',hair:'#3a2a1a',shirt:'#b23a2e',pants:'#3a4a63',shoe:'#201a14'},[[31,24],[34,24],[34,21],[31,21]],0.5);
+  walker({kind:'menina',skin:'#e7b377',hair:'#4a3320',shirt:'#caa060',pants:'#9a3b2e',shoe:'#3a2318'},[[33,25],[30,25],[30,22],[33,22]],0.46);
 
   const jeep={x:MW*TS,y:15*TS,w:3*TS,speed:0.35};
 
@@ -369,7 +374,7 @@
     jipe:{eyebrow:'NA RUA',title:'Um tanque do Exército',text:'Um tanque desce a rua devagar, a torre apontada pra frente, soldados observando as janelas. Ainda não dispararam nada. Mas todo mundo que vê sente a mesma coisa: isto é o começo de alguma coisa grande.'},
   };
   const order=['radio','banca','vizinhos','bar','jipe'];
-  const points={ radio:[5.5,12], banca:[24.8,13.6], vizinhos:[14,13], bar:[6.5,23.4] };
+  const points={ radio:[3.5,9.5], banca:[16,11.5], vizinhos:[14,16.5], bar:[2.5,16.5] };
   const found={}; order.forEach(k=>found[k]=false);
 
   const player={x:13*TS,y:12*TS,dir:'down',moving:false,animT:0,phase:0,blinkT:2000,closing:0,col:{kind:'civil',skin:'#e7b377',hair:'#2a1c12',shirt:'#9a3b2e',pants:'#334055',shoe:'#201a14'}};
@@ -396,7 +401,7 @@
   // Por tipo (col.kind): 4 direções × 4 frames, PNGs 48×48 em assets/chars/<kind>_<dir>_<f>.png.
   // Carrega em segundo plano; cada tipo só é usado quando seus 16 frames carregam (senão,
   // drawActor cai no sprite procedural buildChar — fallback, nada quebra).
-  const NPC_KINDS=['suit','dress','soldier','dog'];
+  const NPC_KINDS=['suit','dress','soldier','dog','menino','menina','operario','senhora'];
   const npcImgSheets={}; const npcReady={};
   NPC_KINDS.forEach(kind=>{
     npcImgSheets[kind]={down:[],up:[],left:[],right:[]}; npcReady[kind]=false; let ok=0;
@@ -430,6 +435,9 @@
 
   // ---- TELEFONE PÚBLICO DE PAREDE de época (PixelLab) ----
   const phoneImg=new Image(); let phoneReady=false; phoneImg.onload=()=>{ phoneReady=true; }; phoneImg.src='../assets/objs/phone_wall.png';
+  // ---- MURO / COBOGÓ / PORTÃO / CORETO / TOLDO (PixelLab) ----
+  const cityImg={}; const cityReady={};
+  ['muro','cobogo','portao','coreto','toldo'].forEach(k=>{ const img=new Image(); cityReady[k]=false; img.onload=()=>{ cityReady[k]=true; }; img.src=`../assets/objs/${k}.png`; cityImg[k]=img; });
 
   // ---- MÓVEIS DO INTERIOR (PixelLab) ----
   const FURN_KEYS=['geladeira','fogao','mesa','sofa','poltrona','cristaleira','radio','abajur','pia','cama','criado','guardaroupa','sofa_costas','planta_samambaia','planta_comigo','jardineira','estante','lustre','balcao','botijao','luminaria'];
@@ -578,7 +586,7 @@
   const cam={x:0,y:0};
   // ======================= CENA: CASA (interior) =======================
   let scene='casa';
-  const DEBUG_GRID=false; // grid de depuração (desligado após aprovação)
+  const DEBUG_GRID=true; // grid de depuração (LIGADO p/ conferir a cidade; remover após aprovação)
   // Bordas internas das paredes (onde as COSTAS dos móveis encostam):
   const WALL_T=3*TS, WALL_B=16*TS, WALL_L=3*TS, WALL_R=25*TS;
   // Móveis encostados: {k, w:'top'|'bottom'|'left'|'right', a:<posição ao longo da parede, px>}.
@@ -630,7 +638,7 @@
     for(const c of casaColliders) if(fx0<c.x1&&fx1>c.x0&&fy0<c.y1&&fy1>c.y0) return true;
     if(fx0<dog.x+14&&fx1>dog.x+2&&fy0<dog.y+16&&fy1>dog.y+6) return true; // cachorro bloqueia
     return false; }
-  function goCidade(){ scene='cidade'; player.x=32*TS; player.y=12*TS; player.dir='down'; player.moving=false; cam.x=0; cam.y=0; }
+  function goCidade(){ scene='cidade'; player.x=12*TS; player.y=11*TS; player.dir='down'; player.moving=false; cam.x=0; cam.y=0; } // em frente ao portão da casa do NO
   function updateCasa(dt,time){
     computeCasaColliders();
     player.blinkT-=dt; if(player.blinkT<=0){ player.closing=130; player.blinkT=1800+Math.random()*3200; } if(player.closing>0) player.closing-=dt;
@@ -747,10 +755,13 @@
           const him=houseImg[e.model], dw=e.fw*TS+8, dh=Math.round(him.height*dw/him.width);
           ctx.drawImage(him,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh);
           if(e.bar){ const by=(baseY-dh*0.5)|0; ctx.fillStyle=OL; ctx.fillRect((fcx-11)|0,by,22,9); ctx.fillStyle='#f0c04a'; ctx.font='7px monospace'; ctx.textAlign='center'; ctx.fillText('BAR',fcx,by+7); ctx.textAlign='left'; }
+          if(e.toldo && cityReady['toldo']){ const tim=cityImg['toldo'], tw=e.fw*TS, th=Math.round(tim.height*tw/tim.width); ctx.drawImage(tim,(fcx-tw/2)|0,(baseY-th+2)|0,tw,th); } // toldo sobre a calçada
           if(e.sign){ ctx.font='7px monospace'; const sw=Math.max(18,ctx.measureText(e.sign).width+8), by=(baseY-dh*0.62)|0; ctx.fillStyle=OL; ctx.fillRect((fcx-sw/2-1)|0,by-1,(sw+2)|0,11); ctx.fillStyle=e.signCol||'#2e5fa3'; ctx.fillRect((fcx-sw/2)|0,by,sw|0,9); ctx.fillStyle='#f4f1e8'; ctx.textAlign='center'; ctx.fillText(e.sign,fcx,by+7); ctx.textAlign='left'; }
         } else if((e.type==='tree'||e.type==='bush') && vegReady[e.model]){
           const vim=vegImg[e.model], dw=(e.type==='tree'?48:26), dh=Math.round(vim.height*dw/vim.width);
           ctx.drawImage(vim,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh);
+        } else if(e.type==='muro' && cityReady['muro']){
+          const dw=20, dh=24; ctx.drawImage(cityImg['muro'],(fcx-dw/2)|0,(baseY-dh)|0,dw,dh);
         } else blit(e.spr,fcx,baseY);
         if(e.water){ const wob=Math.sin(time/300); ctx.fillStyle='#8fc0dc'; ctx.fillRect((fcx-6)|0,(baseY-e.spr.h+9+wob)|0,12,2); }
         if(e.type==='radio'){ const ph=(time/260|0)%3; ctx.strokeStyle='rgba(255,220,150,.85)'; ctx.lineWidth=1; const rx=e.tx*TS+9, ry=(e.ty+1)*TS-14; for(let i=0;i<3;i++){ if((ph+i)%3) continue; ctx.beginPath(); ctx.arc(rx,ry,3+i*3,-1.1,0.3); ctx.stroke(); } }
@@ -764,6 +775,11 @@
         ctx.fillStyle='rgba(18,12,28,.3)'; ctx.beginPath(); ctx.ellipse(fcx,baseY-1,6,3,0,0,6.3); ctx.fill();
         ctx.fillStyle=OL; ctx.fillRect((fcx-2)|0,(baseY-26)|0,4,26); ctx.fillStyle='#8a847a'; ctx.fillRect((fcx-1)|0,(baseY-26)|0,2,26); // poste
         if(phoneReady){ const dw=phoneImg.width, dh=phoneImg.height; ctx.drawImage(phoneImg,(fcx-dw/2)|0,(baseY-22-dh)|0,dw,dh); } } // caixa de parede no topo
+      else if(e.type==='portao'){ const fcx=e.tx*TS+8, baseY=(e.ty+1)*TS;
+        if(cityReady['portao']){ const pim=cityImg['portao'], dw=20, dh=Math.round(pim.height*dw/pim.width); ctx.drawImage(pim,(fcx-dw/2)|0,(baseY-dh)|0,dw,dh); } }
+      else if(e.type==='coreto'){ const fcx=e.tx*TS+(e.fw*TS)/2, baseY=(e.ty+e.fh)*TS;
+        ctx.fillStyle='rgba(18,12,28,.3)'; ctx.beginPath(); ctx.ellipse(fcx,baseY-2,30,8,0,0,6.3); ctx.fill();
+        if(cityReady['coreto']){ const cim=cityImg['coreto']; ctx.drawImage(cim,(fcx-cim.width/2)|0,(baseY-cim.height)|0); } }
       else if(e.type==='npc'){ drawActor(e,time); if(e.act&&!found[e.act]){ const mx=e.tx*TS+6, my=(e.ty+1)*TS-40+Math.round(Math.sin(time/250)); ctx.fillStyle=OL; ctx.fillRect(mx-1,my-1,6,9); ctx.fillStyle='#edc63a'; ctx.fillRect(mx,my,4,6); ctx.fillRect(mx,my+7,4,2);} }
     }
     drawParts();
@@ -779,6 +795,10 @@
     ctx.globalCompositeOperation='source-over';
     let vg=ctx.createRadialGradient(cam.x+VW/2,cam.y+VH/2,VH*.42,cam.x+VW/2,cam.y+VH/2,VH*.85); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(24,14,34,.4)'); ctx.fillStyle=vg; ctx.fillRect(cam.x,cam.y,VW,VH);
     if(!paused){ const k=near(); if(k){ const sx=(player.x+8-cam.x|0)-5, sy=(player.y-14-cam.y)|0; ctx.fillStyle=OL; ctx.fillRect(sx-1,sy-1,14,11); ctx.fillStyle='#edc63a'; ctx.fillRect(sx,sy,12,9); ctx.fillStyle=OL; ctx.font='bold 7px monospace'; ctx.textAlign='center'; ctx.fillText('E',sx+6,sy+7); ctx.textAlign='left'; } }
+    if(DEBUG_GRID){ ctx.globalCompositeOperation='source-over'; ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1;
+      for(let x=0;x<=MW*TS;x+=TS){ ctx.beginPath(); ctx.moveTo(x+0.5,0); ctx.lineTo(x+0.5,MH*TS); ctx.stroke(); }
+      for(let y=0;y<=MH*TS;y+=TS){ ctx.beginPath(); ctx.moveTo(0,y+0.5); ctx.lineTo(MW*TS,y+0.5); ctx.stroke(); }
+      ctx.fillStyle='rgba(255,80,80,.28)'; for(let ty=0;ty<MH;ty++) for(let tx=0;tx<MW;tx++) if(solid[ty][tx]) ctx.fillRect(tx*TS,ty*TS,TS,TS); }
     ctx.restore();
   }
 
