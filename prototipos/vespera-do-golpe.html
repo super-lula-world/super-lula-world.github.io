@@ -347,6 +347,29 @@
   function onSpriteLoad(){ imgLoaded++; if(imgLoaded>=IMG_TOTAL){ startBtn.disabled=false; startBtn.textContent='Começar'; } }
   ['down','up','right','left'].forEach(dir=>{ for(let f=0;f<4;f++){ const img=new Image(); img.onload=img.onerror=onSpriteLoad; img.src=`../assets/chars/player_${dir}_${f}.png`; playerImgSheet[dir].push(img); } });
 
+  // ---- SPRITE DO TANQUE (PixelLab) ----
+  // Carrega em segundo plano; NAO trava o botao Comecar. Enquanto o PNG nao
+  // existir, drawTank cai no desenho procedural (fallback). Se o sprite sair
+  // virado pro lado errado, troque TANK_FLIP para true.
+  const TANK_FLIP=false;
+  const tankImg=new Image(); let tankReady=false;
+  tankImg.onload=()=>{ tankReady=true; };
+  tankImg.src='../assets/objs/tank_side.png';
+
+  // ---- SPRITESHEETS DE NPC (PixelLab) ----
+  // Por tipo (col.kind): 4 direções × 4 frames, PNGs 48×48 em assets/chars/<kind>_<dir>_<f>.png.
+  // Carrega em segundo plano; cada tipo só é usado quando seus 16 frames carregam (senão,
+  // drawActor cai no sprite procedural buildChar — fallback, nada quebra).
+  const NPC_KINDS=['suit','dress','soldier'];
+  const npcImgSheets={}; const npcReady={};
+  NPC_KINDS.forEach(kind=>{
+    npcImgSheets[kind]={down:[],up:[],left:[],right:[]}; npcReady[kind]=false; let ok=0;
+    ['down','up','left','right'].forEach(dir=>{ for(let f=0;f<4;f++){ const img=new Image();
+      img.onload=()=>{ if(++ok>=16) npcReady[kind]=true; };
+      img.src=`../assets/chars/${kind}_${dir}_${f}.png`;
+      npcImgSheets[kind][dir].push(img); } });
+  });
+
   const SPD=1.2;
   function blocked(px,py){ const bx=px+3,by=py+16,bw=10,bh=4,c=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
     for(const[cx,cy]of c){ const tx=cx/TS|0,ty=cy/TS|0; if(tx<0||ty<0||tx>=MW||ty>=MH) return true; if(solid[ty][tx]) return true; } return false; }
@@ -378,10 +401,19 @@
   function drawActor(a,time){
     const fcx=a.x!==undefined?a.x+8:(a.tx*TS+8), baseY=a.y!==undefined?a.y+16:((a.ty+1)*TS);
     const bob=a.moving?0:Math.round(Math.sin(time/480+a.phase)*0.6);
-    const fr=a.moving?(a.animT|0)%4:0; const img=a.sheet[a.dir][fr];
+    const fr=a.moving?(a.animT|0)%4:0;
     shadow(fcx,baseY,5);
-    const sx=(fcx-8)|0, sy=(baseY-32+bob)|0; ctx.drawImage(img,sx,sy);
-    if(a.closing>0 && a.dir!=='up'){ ctx.fillStyle=a.col.skin; const ey=sy+10; if(a.dir==='down'){ ctx.fillRect(sx+6,ey,1,2); ctx.fillRect(sx+9,ey,1,2);} else if(a.dir==='left'){ ctx.fillRect(sx+6,ey,1,2);} else { ctx.fillRect(sx+9,ey,1,2);} }
+    const kind=a.col.kind;
+    if(npcReady[kind]){
+      // SPRITE do PixelLab (48×48, mesmo encaixe do jogador)
+      const img=npcImgSheets[kind][a.dir][fr];
+      ctx.drawImage(img,(fcx-24)|0,(baseY-44+bob)|0);
+    } else {
+      // FALLBACK procedural (buildChar 16×32)
+      const img=a.sheet[a.dir][fr];
+      const sx=(fcx-8)|0, sy=(baseY-32+bob)|0; ctx.drawImage(img,sx,sy);
+      if(a.closing>0 && a.dir!=='up'){ ctx.fillStyle=a.col.skin; const ey=sy+10; if(a.dir==='down'){ ctx.fillRect(sx+6,ey,1,2); ctx.fillRect(sx+9,ey,1,2);} else if(a.dir==='left'){ ctx.fillRect(sx+6,ey,1,2);} else { ctx.fillRect(sx+9,ey,1,2);} }
+    }
   }
   function drawPlayer(time){
     const fcx=player.x+8, baseY=player.y+16;
@@ -399,28 +431,39 @@
   }
   function drawTank(time){
     const x=jeep.x|0, y=jeep.y|0, w=jeep.w, olv='#5a6436', olvD='#434d28', olvL='#6d7846', camo='#3b461f';
-    // sombra projetada sob a carcaça (peso visual)
+    // sombra projetada sob a carcaça (peso visual) — vale pro sprite e pro fallback
     ctx.fillStyle='rgba(18,12,28,.36)'; ctx.beginPath(); ctx.ellipse(x+w/2,y+22,w*0.56,7,0,0,6.3); ctx.fill();
-    // ESTEIRA / lagarta de metal escura
-    ctx.fillStyle=OL; ctx.fillRect(x,y+13,w,10); ctx.fillStyle='#24241e'; ctx.fillRect(x+1,y+14,w-2,8);
-    const off=(time*0.03)%4; ctx.fillStyle='#3d3d32'; for(let i=-1;i<w/4+1;i++){ ctx.fillRect((x+i*4+off)|0,y+13,2,1); ctx.fillRect((x+i*4+off)|0,y+22,2,1); }
-    // rodas visíveis + roletes das pontas
-    for(let i=0;i<5;i++){ const wx=x+7+i*((w-14)/4); ctx.fillStyle='#3a3a30'; ctx.beginPath(); ctx.arc(wx,y+18,3.2,0,6.3); ctx.fill(); ctx.fillStyle='#17170f'; ctx.beginPath(); ctx.arc(wx,y+18,1.4,0,6.3); ctx.fill(); }
-    ctx.fillStyle='#4a4a3c'; ctx.beginPath(); ctx.arc(x+5,y+18,3.8,0,6.3); ctx.fill(); ctx.beginPath(); ctx.arc(x+w-5,y+18,3.8,0,6.3); ctx.fill();
-    // BLINDAGEM angular (casco)
-    ctx.fillStyle=OL; ctx.beginPath(); ctx.moveTo(x+1,y+14); ctx.lineTo(x+8,y+6); ctx.lineTo(x+w-6,y+6); ctx.lineTo(x+w,y+14); ctx.closePath(); ctx.fill();
-    ctx.fillStyle=olv; ctx.beginPath(); ctx.moveTo(x+2,y+13); ctx.lineTo(x+9,y+7); ctx.lineTo(x+w-7,y+7); ctx.lineTo(x+w-1,y+13); ctx.closePath(); ctx.fill();
-    ctx.fillStyle=olvL; ctx.fillRect(x+9,y+7,w-16,1);
-    ctx.fillStyle=camo; ctx.fillRect(x+13,y+9,5,3); ctx.fillRect(x+25,y+8,6,2); ctx.fillRect(x+34,y+10,4,2); // camuflagem
-    // TORRE arredondada + escotilha
-    ctx.fillStyle=OL; ctx.beginPath(); ctx.ellipse(x+w/2+3,y+4,11,7,0,0,6.3); ctx.fill();
-    ctx.fillStyle=olv; ctx.beginPath(); ctx.ellipse(x+w/2+3,y+4,10,6,0,0,6.3); ctx.fill();
-    ctx.fillStyle=olvL; ctx.beginPath(); ctx.ellipse(x+w/2+1,y+2,5,2.4,0,0,6.3); ctx.fill();
-    ctx.fillStyle=olvD; ctx.beginPath(); ctx.arc(x+w/2+6,y+3,2.4,0,6.3); ctx.fill(); ctx.fillStyle=OL; ctx.fillRect(x+w/2+4,y+3,5,1); // escotilha
-    // CANHÃO apontado pra frente (esquerda, sentido do movimento)
-    ctx.fillStyle=OL; ctx.fillRect(x-11,y+2,19,5); ctx.fillStyle=olvD; ctx.fillRect(x-11,y+3,18,3); ctx.fillStyle='#2b2b22'; ctx.fillRect(x-12,y+2,3,5);
-    // escapamento atrás (direita)
-    if((time|0)%6===0) spawn({x:x+w-2,y:y+13,vx:0.02,vy:-0.015,life:1000,max:1000,kind:'exh',size:2});
+    if(tankReady){
+      // SPRITE do PixelLab (PNG já aparado): escala pra ficar proporcional e base na sombra
+      const TANK_SCALE=1.5;
+      const dw=Math.round(tankImg.width*TANK_SCALE), dh=Math.round(tankImg.height*TANK_SCALE);
+      const dx=(x+w/2-dw/2)|0, dy=(y+24-dh)|0;   // centrado no corpo; esteira encosta na sombra
+      if(TANK_FLIP){ ctx.save(); ctx.translate(dx+dw,0); ctx.scale(-1,1); ctx.drawImage(tankImg,0,dy,dw,dh); ctx.restore(); }
+      else ctx.drawImage(tankImg,dx,dy,dw,dh);
+    } else {
+      // FALLBACK procedural (desenho original, enquanto o PNG não existir)
+      // ESTEIRA / lagarta de metal escura
+      ctx.fillStyle=OL; ctx.fillRect(x,y+13,w,10); ctx.fillStyle='#24241e'; ctx.fillRect(x+1,y+14,w-2,8);
+      const off=(time*0.03)%4; ctx.fillStyle='#3d3d32'; for(let i=-1;i<w/4+1;i++){ ctx.fillRect((x+i*4+off)|0,y+13,2,1); ctx.fillRect((x+i*4+off)|0,y+22,2,1); }
+      // rodas visíveis + roletes das pontas
+      for(let i=0;i<5;i++){ const wx=x+7+i*((w-14)/4); ctx.fillStyle='#3a3a30'; ctx.beginPath(); ctx.arc(wx,y+18,3.2,0,6.3); ctx.fill(); ctx.fillStyle='#17170f'; ctx.beginPath(); ctx.arc(wx,y+18,1.4,0,6.3); ctx.fill(); }
+      ctx.fillStyle='#4a4a3c'; ctx.beginPath(); ctx.arc(x+5,y+18,3.8,0,6.3); ctx.fill(); ctx.beginPath(); ctx.arc(x+w-5,y+18,3.8,0,6.3); ctx.fill();
+      // BLINDAGEM angular (casco)
+      ctx.fillStyle=OL; ctx.beginPath(); ctx.moveTo(x+1,y+14); ctx.lineTo(x+8,y+6); ctx.lineTo(x+w-6,y+6); ctx.lineTo(x+w,y+14); ctx.closePath(); ctx.fill();
+      ctx.fillStyle=olv; ctx.beginPath(); ctx.moveTo(x+2,y+13); ctx.lineTo(x+9,y+7); ctx.lineTo(x+w-7,y+7); ctx.lineTo(x+w-1,y+13); ctx.closePath(); ctx.fill();
+      ctx.fillStyle=olvL; ctx.fillRect(x+9,y+7,w-16,1);
+      ctx.fillStyle=camo; ctx.fillRect(x+13,y+9,5,3); ctx.fillRect(x+25,y+8,6,2); ctx.fillRect(x+34,y+10,4,2); // camuflagem
+      // TORRE arredondada + escotilha
+      ctx.fillStyle=OL; ctx.beginPath(); ctx.ellipse(x+w/2+3,y+4,11,7,0,0,6.3); ctx.fill();
+      ctx.fillStyle=olv; ctx.beginPath(); ctx.ellipse(x+w/2+3,y+4,10,6,0,0,6.3); ctx.fill();
+      ctx.fillStyle=olvL; ctx.beginPath(); ctx.ellipse(x+w/2+1,y+2,5,2.4,0,0,6.3); ctx.fill();
+      ctx.fillStyle=olvD; ctx.beginPath(); ctx.arc(x+w/2+6,y+3,2.4,0,6.3); ctx.fill(); ctx.fillStyle=OL; ctx.fillRect(x+w/2+4,y+3,5,1); // escotilha
+      // CANHÃO apontado pra frente (esquerda, sentido do movimento)
+      ctx.fillStyle=OL; ctx.fillRect(x-11,y+2,19,5); ctx.fillStyle=olvD; ctx.fillRect(x-11,y+3,18,3); ctx.fillStyle='#2b2b22'; ctx.fillRect(x-12,y+2,3,5);
+    }
+    // escapamento atrás (direita) — vale pro sprite e pro fallback
+    const exX=tankReady?x+w+10:x+w-2, exY=tankReady?y+16:y+13;
+    if((time|0)%6===0) spawn({x:exX,y:exY,vx:0.02,vy:-0.015,life:1000,max:1000,kind:'exh',size:2});
   }
 
   function updateParts(dt,time){
