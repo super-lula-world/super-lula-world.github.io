@@ -372,7 +372,7 @@
   const points={ radio:[5.5,12], banca:[24.8,13.6], vizinhos:[14,13], bar:[6.5,23.4] };
   const found={}; order.forEach(k=>found[k]=false);
 
-  const player={x:13*TS,y:13*TS,dir:'down',moving:false,animT:0,phase:0,blinkT:2000,closing:0,col:{kind:'civil',skin:'#e7b377',hair:'#2a1c12',shirt:'#9a3b2e',pants:'#334055',shoe:'#201a14'}};
+  const player={x:12*TS,y:13*TS,dir:'down',moving:false,animT:0,phase:0,blinkT:2000,closing:0,col:{kind:'civil',skin:'#e7b377',hair:'#2a1c12',shirt:'#9a3b2e',pants:'#334055',shoe:'#201a14'}};
   player.sheet=buildChar(player.col);
 
   // ---- LOADER DE SPRITES DO JOGADOR (PixelLab) ----
@@ -438,6 +438,10 @@
   // ---- PISOS DO INTERIOR (PixelLab, tiles 32×32) ----
   const floorLad=new Image(); let floorLadReady=false; floorLad.onload=()=>{ floorLadReady=true; }; floorLad.src='../assets/objs/floor_ladrilho.png';
   const floorTaco=new Image(); let floorTacoReady=false; floorTaco.onload=()=>{ floorTacoReady=true; }; floorTaco.src='../assets/objs/floor_taco.png';
+  // ---- DECORAÇÃO DE PAREDE (PixelLab) ----
+  const DECO_KEYS=['relogio','quadro_familia','quadro_paisagem','quadro_santa','crucifixo'];
+  const decoImg={}; const decoReady={};
+  DECO_KEYS.forEach(k=>{ const img=new Image(); decoReady[k]=false; img.onload=()=>{ decoReady[k]=true; }; img.src=`../assets/objs/deco_${k}.png`; decoImg[k]=img; });
 
   const SPD=1.2;
   function blocked(px,py){ const bx=px+3,by=py+16,bw=10,bh=4,c=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
@@ -574,33 +578,33 @@
   const cam={x:0,y:0};
   // ======================= CENA: CASA (interior) =======================
   let scene='casa';
-  // ZONAS: cozinha (sup-esq), mesa jantar (centro), quarto (sup-dir atrás da divisória), sala (baixo)
+  // ZONAS (piso rows 3–15): cozinha (sup-esq, ladrilho), mesa jantar (borda), quarto (sup-dir atrás da divisória), sala (baixo, taco)
   const casaFurn=[
-    // cozinha (encostada na parede de cima)
-    {k:'geladeira',  cx:2.0*TS, by:4.6*TS}, {k:'fogao',     cx:4.0*TS, by:4.6*TS},
-    {k:'pia',        cx:6.0*TS, by:4.6*TS}, {k:'cristaleira',cx:8.0*TS, by:4.2*TS},
-    // mesa de jantar (entre cozinha e sala)
-    {k:'mesa',       cx:12.0*TS,by:6.8*TS},
+    // cozinha — toda colada na parede e dentro do ladrilho (cols 1–8)
+    {k:'geladeira',  cx:2.0*TS, by:6.6*TS}, {k:'fogao',     cx:4.0*TS, by:6.6*TS},
+    {k:'pia',        cx:6.0*TS, by:6.6*TS}, {k:'cristaleira',cx:8.0*TS, by:6.2*TS},
+    // mesa de jantar — na borda cozinha/sala
+    {k:'mesa',       cx:10.5*TS,by:8.8*TS},
     // quarto (atrás da divisória)
-    {k:'cama',       cx:20.5*TS,by:5.2*TS}, {k:'criado',    cx:23.6*TS,by:4.8*TS},
-    {k:'guardaroupa',cx:25.2*TS,by:6.6*TS},
-    // sala de estar (em volta do tapete, sofá embaixo / TV em cima)
-    {k:'sofa',       cx:18.0*TS,by:15.2*TS},{k:'poltrona',  cx:24.0*TS,by:13.8*TS},
-    {k:'radio',      cx:9.4*TS, by:11.2*TS},{k:'abajur',    cx:25.3*TS,by:10.6*TS},
+    {k:'cama',       cx:20.5*TS,by:7.2*TS}, {k:'criado',    cx:23.6*TS,by:6.8*TS},
+    {k:'guardaroupa',cx:25.2*TS,by:8.6*TS},
+    // sala de estar (em volta do tapete; sofá embaixo, TV em cima)
+    {k:'sofa',       cx:18.0*TS,by:15.2*TS},{k:'poltrona',  cx:24.0*TS,by:14.0*TS},
+    {k:'radio',      cx:9.4*TS, by:13.2*TS},{k:'abajur',    cx:25.3*TS,by:12.6*TS},
   ];
   const casaSolids=[ // tx,ty,w,h
-    [1,2,2,2],[3,2,2,2],[5,2,2,2],[7,2,2,2],   // geladeira,fogão,pia,cristaleira
-    [10,5,4,2],                                 // mesa jantar
-    [19,2,3,3],[23,3,1,1],[24,4,2,2],           // cama, criado, guarda-roupa
-    [16,13,4,2],[23,12,2,2],[9,10,2,1],         // sofá, poltrona, rádio
-    [16,8,3,1],[17,11,2,1] ];                   // TV, mesinha de centro
-  // divisória do quarto (porta no gap cols 20–21 da parede de baixo)
-  const casaWalls=[ [17,1,1,6], [17,7,3,1], [22,7,5,1] ];
-  const dog={x:10*TS,y:13*TS,dir:'right',animT:0,path:[[9,13],[14,13],[14,15],[9,15]].map(([a,b])=>({x:a*TS,y:b*TS})),wp:1,spd:0.3};
+    [1,4,2,2],[3,4,2,2],[5,4,2,2],[7,4,2,2],   // geladeira,fogão,pia,cristaleira
+    [9,7,4,2],                                  // mesa jantar (borda)
+    [19,4,3,3],[23,5,1,1],[24,6,2,2],           // cama, criado, guarda-roupa
+    [16,13,4,2],[23,12,2,2],[9,12,2,1],         // sofá, poltrona, rádio
+    [16,10,3,1],[17,13,2,1] ];                  // TV, mesinha de centro
+  // divisória do quarto (porta no gap cols 20–21 da parede de baixo, row 9)
+  const casaWalls=[ [17,3,1,6], [17,9,3,1], [22,9,5,1] ];
+  const dog={x:9*TS,y:14*TS,dir:'right',animT:0,path:[[8,14],[13,14],[13,11],[8,11]].map(([a,b])=>({x:a*TS,y:b*TS})),wp:1,spd:0.3};
   function blockedCasa(px,py){ const bx=px+3,by=py+16,bw=10,bh=4,cs=[[bx,by],[bx+bw-1,by],[bx,by+bh-1],[bx+bw-1,by+bh-1]];
     for(const[cx,cy] of cs){ const tx=cx/TS|0, ty=cy/TS|0, door=(tx>=13&&tx<=14);
-      if(tx<1||tx>26||ty<1) return true;
-      if(ty>16&&!door) return true; if(ty>18) return true;
+      if(tx<1||tx>26||ty<3) return true;
+      if(ty>15&&!door) return true; if(ty>17) return true;
       for(const f of casaSolids) if(tx>=f[0]&&tx<f[0]+f[2]&&ty>=f[1]&&ty<f[1]+f[3]) return true;
       for(const w of casaWalls) if(tx>=w[0]&&tx<w[0]+w[2]&&ty>=w[1]&&ty<w[1]+w[3]) return true; }
     return false; }
@@ -618,7 +622,7 @@
     const nx=player.x+dx*SPD, ny=player.y+dy*SPD;
     if(dx&&!blockedCasa(nx,player.y)) player.x=nx; if(dy&&!blockedCasa(player.x,ny)) player.y=ny;
     if(player.moving) player.animT=(player.animT+dt*.009)%4;
-    const ft=(player.y+16)/TS|0, fx=(player.x+8)/TS|0; if(ft>=17&&fx>=12&&fx<=15) goCidade();
+    const ft=(player.y+16)/TS|0, fx=(player.x+8)/TS|0; if(ft>=16&&fx>=12&&fx<=15) goCidade();
   }
   function drawSofa(x,y){ const w=3*TS,h=2*TS; ctx.fillStyle=OL; ctx.fillRect(x-1,y-1,w+2,h+2); ctx.fillStyle='#4a6d7a'; ctx.fillRect(x,y,w,h);
     ctx.fillStyle='#5f8592'; ctx.fillRect(x+3,y+4,w-6,h-8); ctx.fillStyle='#3a5560'; ctx.fillRect(x,y,6,h); ctx.fillRect(x+w-6,y,6,h); ctx.fillStyle='#6f98a4'; ctx.fillRect(x+8,y+5,w-16,3); }
@@ -637,47 +641,51 @@
     else { ctx.fillStyle=OL; ctx.fillRect((fcx-8)|0,(baseY-9)|0,16,8); ctx.fillStyle='#7a5230'; ctx.fillRect((fcx-7)|0,(baseY-8)|0,14,6); ctx.fillRect((fcx-9)|0,(baseY-10)|0,4,4); ctx.fillStyle=OL; ctx.fillRect((fcx-7)|0,(baseY-2)|0,2,3); ctx.fillRect((fcx+5)|0,(baseY-2)|0,2,3); } }
   function drawCasa(time){
     ctx.fillStyle='#120d0a'; ctx.fillRect(0,0,VW,VH);
-    // PAREDE DE FUNDO: faixa de papel de parede em cima + rodapé
-    ctx.fillStyle='#8a6f52'; ctx.fillRect(0,0,VW,2*TS); ctx.fillStyle='#9a7a5c'; for(let x=0;x<VW;x+=8) ctx.fillRect(x,3,1,2*TS-8); ctx.fillStyle='#b89a74'; ctx.fillRect(0,0,VW,3);
-    ctx.fillStyle='#5a4733'; ctx.fillRect(0,2*TS-4,VW,4); ctx.fillStyle=OL; ctx.fillRect(0,2*TS-1,VW,1); // rodapé
-    // PISOS por zona (ladrilho hidráulico na cozinha, taco no resto)
-    for(let y=TS;y<17*TS;y+=32) for(let x=TS;x<27*TS;x+=32){ const col=x/TS, row=y/TS, kitchen=(col<=7&&row<=5);
+    // PISOS (rows 3–15) — ladrilho na cozinha (cols 1–8), taco no resto
+    for(let y=3*TS;y<16*TS;y+=32) for(let x=TS;x<27*TS;x+=32){ const col=x/TS, row=y/TS, kitchen=(col<=7&&row<=7);
       if(kitchen&&floorLadReady) ctx.drawImage(floorLad,x,y,32,32);
       else if(!kitchen&&floorTacoReady) ctx.drawImage(floorTaco,x,y,32,32);
-      else { ctx.fillStyle=kitchen?'#b9b0a0':'#9a6e42'; ctx.fillRect(x,y,32,32); } }
-    // PAREDES externas
-    ctx.fillStyle='#6f5a40'; ctx.fillRect(0,0,TS,VH); ctx.fillRect(27*TS,0,TS,VH); ctx.fillRect(0,17*TS,VW,TS); ctx.fillStyle=OL; ctx.fillRect(TS-2,0,2,VH); ctx.fillRect(27*TS,0,2,VH); ctx.fillRect(0,17*TS,VW,2);
+      else { ctx.fillStyle=kitchen?'#b2aea4':'#9a8468'; ctx.fillRect(x,y,32,32); } }
+    // PAREDE DE FUNDO (3 fileiras): sanca no topo + papel + rodapé embaixo
+    ctx.fillStyle='#857058'; ctx.fillRect(0,0,VW,3*TS);
+    ctx.fillStyle='#907a60'; for(let x=0;x<VW;x+=10) ctx.fillRect(x,8,2,3*TS-22);
+    ctx.fillStyle='#b89a74'; ctx.fillRect(0,0,VW,5); ctx.fillStyle=OL; ctx.fillRect(0,5,VW,1);
+    ctx.fillStyle='#5a4733'; ctx.fillRect(0,3*TS-6,VW,6); ctx.fillStyle=OL; ctx.fillRect(0,3*TS-1,VW,1);
+    // PAREDES LATERAIS + de baixo (sensação de caixa)
+    ctx.fillStyle='#6f5a44'; ctx.fillRect(0,0,TS,VH); ctx.fillRect(27*TS,0,TS,VH);
+    ctx.fillStyle='#5a4733'; ctx.fillRect(TS-4,3*TS,4,13*TS); ctx.fillRect(27*TS,3*TS,4,13*TS);
+    ctx.fillStyle=OL; ctx.fillRect(TS-1,0,1,VH); ctx.fillRect(27*TS,0,1,VH);
+    ctx.fillStyle='#6f5a44'; ctx.fillRect(0,16*TS,VW,2*TS); ctx.fillStyle=OL; ctx.fillRect(0,16*TS,VW,1);
     // DIVISÓRIA do quarto (com leve altura)
     for(const w of casaWalls){ const x=w[0]*TS,y=w[1]*TS,wd=w[2]*TS,ht=w[3]*TS,lip=7;
       ctx.fillStyle=OL; ctx.fillRect(x-1,y-lip-1,wd+2,ht+lip+2); ctx.fillStyle='#7a6248'; ctx.fillRect(x,y-lip,wd,ht+lip);
       ctx.fillStyle='#917858'; ctx.fillRect(x,y-lip,wd,3); ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fillRect(x,y+ht-3,wd,3); }
     // TAPETE (sala)
-    ctx.fillStyle='#8a3b2e'; ctx.fillRect(14*TS,11*TS,9*TS,4*TS); ctx.fillStyle='#a4513c'; ctx.fillRect(14*TS+3,11*TS+3,9*TS-6,4*TS-6); ctx.fillStyle='#b9654a'; ctx.fillRect(14*TS+6,11*TS+6,9*TS-12,4*TS-12);
-    // JANELA + CORTINA (parede de cima)
-    { const wx=20*TS,wy=0.3*TS,ww=4*TS,wh=1.3*TS; ctx.fillStyle=OL; ctx.fillRect(wx-2,wy-2,ww+4,wh+4); const g=ctx.createLinearGradient(wx,wy,wx,wy+wh); g.addColorStop(0,'#f6c37a'); g.addColorStop(1,'#b5705a'); ctx.fillStyle=g; ctx.fillRect(wx,wy,ww,wh); ctx.fillStyle=OL; ctx.fillRect(wx+ww/2-1,wy,2,wh); ctx.fillRect(wx,wy+wh/2-1,ww,2);
+    ctx.fillStyle='#8a3b2e'; ctx.fillRect(14*TS,12*TS,9*TS,3.5*TS); ctx.fillStyle='#a4513c'; ctx.fillRect(14*TS+3,12*TS+3,9*TS-6,3.5*TS-6); ctx.fillStyle='#b9654a'; ctx.fillRect(14*TS+6,12*TS+6,9*TS-12,3.5*TS-12);
+    // JANELA + CORTINA (na parede de fundo alta)
+    { const wx=20*TS,wy=0.5*TS,ww=4*TS,wh=1.7*TS; ctx.fillStyle=OL; ctx.fillRect(wx-2,wy-2,ww+4,wh+4); const g=ctx.createLinearGradient(wx,wy,wx,wy+wh); g.addColorStop(0,'#f6c37a'); g.addColorStop(1,'#b5705a'); ctx.fillStyle=g; ctx.fillRect(wx,wy,ww,wh); ctx.fillStyle=OL; ctx.fillRect(wx+ww/2-1,wy,2,wh); ctx.fillRect(wx,wy+wh/2-1,ww,2);
       ctx.fillStyle='#9a3b2e'; ctx.fillRect(wx-3,wy-2,5,wh+5); ctx.fillRect(wx+ww-2,wy-2,5,wh+5); ctx.fillStyle='#8a3b2e'; ctx.fillRect(wx-4,wy-3,ww+8,3); }
-    // DECORAÇÃO de parede: quadro + relógio + santo
-    [[10,0.4,'quadro','#2e5fa3'],[13,0.35,'relogio',0],[15.4,0.3,'santo',0]].forEach(([tx,ty,kind,c])=>{ const x=tx*TS,y=ty*TS;
-      if(kind==='relogio'){ ctx.fillStyle=OL; ctx.beginPath(); ctx.arc(x+6,y+6,7,0,6.3); ctx.fill(); ctx.fillStyle='#e6e0d0'; ctx.beginPath(); ctx.arc(x+6,y+6,5.5,0,6.3); ctx.fill(); ctx.strokeStyle=OL; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x+6,y+6); ctx.lineTo(x+6,y+2.5); ctx.moveTo(x+6,y+6); ctx.lineTo(x+9,y+6); ctx.stroke(); }
-      else if(kind==='santo'){ ctx.fillStyle='#3a2a1c'; ctx.fillRect(x,y,12,14); ctx.fillStyle='#caa060'; ctx.fillRect(x+2,y+2,8,10); ctx.fillStyle='#f2e6c0'; ctx.fillRect(x+4,y+5,4,5); ctx.fillStyle='#e8c84a'; ctx.fillRect(x+4,y+3,4,1); ctx.fillRect(x+3,y+4,1,1); ctx.fillRect(x+8,y+4,1,1); }
-      else { ctx.fillStyle='#3a2a1c'; ctx.fillRect(x,y,14,11); ctx.fillStyle=c; ctx.fillRect(x+2,y+2,10,7); ctx.fillStyle=shade(c,1.3); ctx.fillRect(x+3,y+3,4,2); } });
+    // DECORAÇÃO pendurada na parede de fundo, distribuída (PixelLab, com fallback)
+    for(const [k,tx,ty] of [['crucifixo',4,0.3],['quadro_familia',8,0.3],['relogio',12,0.3],['quadro_paisagem',16.5,0.4],['quadro_santa',25,0.4]]){ const cx=tx*TS, y=ty*TS;
+      if(decoReady[k]){ const im=decoImg[k]; ctx.drawImage(im,(cx-im.width/2)|0,y|0); }
+      else { ctx.fillStyle='#3a2a1c'; ctx.fillRect((cx-7)|0,y|0,14,12); ctx.fillStyle='#8a7a5a'; ctx.fillRect((cx-5)|0,(y+2)|0,10,8); } }
     // MESINHA DE CENTRO (no tapete)
-    { const mx=17*TS, my=11.3*TS; ctx.fillStyle=OL; ctx.fillRect(mx-1,my-1,2*TS+2,TS+2); ctx.fillStyle='#6e4a2e'; ctx.fillRect(mx,my,2*TS,TS); ctx.fillStyle='#5a3a22'; ctx.fillRect(mx,my+TS-3,2*TS,3); ctx.fillStyle='#e6e0d0'; ctx.fillRect(mx+5,my+2,14,8); ctx.fillStyle='#2b2420'; ctx.fillRect(mx+6,my+3,12,2); }
+    { const mx=17*TS, my=12.6*TS; ctx.fillStyle=OL; ctx.fillRect(mx-1,my-1,2*TS+2,TS+2); ctx.fillStyle='#6e4a2e'; ctx.fillRect(mx,my,2*TS,TS); ctx.fillStyle='#5a3a22'; ctx.fillRect(mx,my+TS-3,2*TS,3); ctx.fillStyle='#e6e0d0'; ctx.fillRect(mx+5,my+2,14,8); ctx.fillStyle='#2b2420'; ctx.fillRect(mx+6,my+3,12,2); }
     // Y-SORT: móveis + TV + cachorro + jogador
     const items=[];
     for(const f of casaFurn){ if(furnReady[f.k]){ const im=furnImg[f.k], ix=(f.cx-im.width/2)|0, iy=(f.by-im.height)|0; items.push({by:f.by, fn:()=>ctx.drawImage(im,ix,iy)}); } }
-    items.push({by:10.2*TS, fn:()=>drawTV(16*TS,8.2*TS,time)}); // TV de frente pro sofá
+    items.push({by:12.2*TS, fn:()=>drawTV(16*TS,10.2*TS,time)}); // TV de frente pro sofá
     items.push({by:dog.y+16, fn:()=>drawDog(time)});
     items.push({by:player.y+16, fn:()=>drawPlayer(time)});
     items.sort((a,b)=>a.by-b.by); for(const it of items) it.fn();
     { const dx=13*TS,dy=16*TS; ctx.fillStyle=OL; ctx.fillRect(dx-1,dy-1,2*TS+2,TS+2); ctx.fillStyle='#5d3b24'; ctx.fillRect(dx,dy,2*TS,TS); ctx.fillStyle='#4a2f1d'; ctx.fillRect(dx+2,dy+2,2*TS-4,TS-2); ctx.fillStyle='#d6a94a'; ctx.fillRect(dx+2*TS-6,dy+TS/2,2,2); ctx.fillStyle='#7a6a4a'; ctx.fillRect(dx+3,dy+TS-2,2*TS-6,3); } // porta+capacho
     ctx.globalCompositeOperation='multiply'; ctx.globalAlpha=.22; ctx.fillStyle='#caa060'; ctx.fillRect(0,0,VW,VH); ctx.globalAlpha=1;
     ctx.globalCompositeOperation='lighter';
-    let tv=ctx.createRadialGradient(17.5*TS,9.5*TS,4,17.5*TS,9.5*TS,66); tv.addColorStop(0,'rgba(120,150,200,'+(0.12+0.05*Math.sin(time/120))+')'); tv.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=tv; ctx.fillRect(17.5*TS-66,9.5*TS-66,132,132);
-    let ab=ctx.createRadialGradient(25.3*TS,9.6*TS,2,25.3*TS,9.6*TS,40); ab.addColorStop(0,'rgba(255,205,120,.5)'); ab.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=ab; ctx.fillRect(25.3*TS-40,9.6*TS-40,80,80);
+    let tv=ctx.createRadialGradient(17.5*TS,11.5*TS,4,17.5*TS,11.5*TS,66); tv.addColorStop(0,'rgba(120,150,200,'+(0.12+0.05*Math.sin(time/120))+')'); tv.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=tv; ctx.fillRect(17.5*TS-66,11.5*TS-66,132,132);
+    let ab=ctx.createRadialGradient(25.3*TS,11.6*TS,2,25.3*TS,11.6*TS,40); ab.addColorStop(0,'rgba(255,205,120,.5)'); ab.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=ab; ctx.fillRect(25.3*TS-40,11.6*TS-40,80,80);
     ctx.globalCompositeOperation='source-over'; let vg=ctx.createRadialGradient(VW/2,VH/2,VH*.4,VW/2,VH/2,VH*.9); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(20,12,28,.5)'); ctx.fillStyle=vg; ctx.fillRect(0,0,VW,VH);
-    { const rx=9.4*TS, ry=9.8*TS, ph=(time/260|0)%3; ctx.strokeStyle='rgba(255,220,150,.7)'; ctx.lineWidth=1; for(let i=0;i<3;i++){ if((ph+i)%3) continue; ctx.beginPath(); ctx.arc(rx,ry,3+i*3,-1.1,0.3); ctx.stroke(); } } // ondas do rádio
-    if(!paused){ const ft=(player.y+16)/TS|0, fx=(player.x+8)/TS|0; if(ft>=15&&fx>=11&&fx<=16){ ctx.fillStyle='#edc63a'; ctx.font='bold 8px monospace'; ctx.textAlign='center'; ctx.fillText('↓ SAIR DE CASA', 14*TS, 15.2*TS); ctx.textAlign='left'; } }
+    { const rx=9.4*TS, ry=11.8*TS, ph=(time/260|0)%3; ctx.strokeStyle='rgba(255,220,150,.7)'; ctx.lineWidth=1; for(let i=0;i<3;i++){ if((ph+i)%3) continue; ctx.beginPath(); ctx.arc(rx,ry,3+i*3,-1.1,0.3); ctx.stroke(); } } // ondas do rádio
+    if(!paused){ const ft=(player.y+16)/TS|0, fx=(player.x+8)/TS|0; if(ft>=14&&fx>=11&&fx<=16){ ctx.fillStyle='#edc63a'; ctx.font='bold 8px monospace'; ctx.textAlign='center'; ctx.fillText('↓ SAIR DE CASA', 14*TS, 15.6*TS); ctx.textAlign='left'; } }
   }
   function draw(time){
     if(scene==='casa'){ drawCasa(time); return; }
