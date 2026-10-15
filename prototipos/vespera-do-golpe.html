@@ -316,12 +316,12 @@
 
   const defs=[
     // CASAS (NO) — muro+portão+quintal
-    {type:'house',tx:1, ty:6, fw:5,fh:2, model:'sobrado', lit:true, chimney:true, gen:genHouse},  // NO sobrado
-    {type:'house',tx:10,ty:5, fw:5,fh:2, model:'geminada', antenna:true,           gen:genHouse},  // NO casa (sua casa)
+    {type:'house',tx:1, ty:6, fw:5,fh:2, model:'sobrado', lit:true, chimney:true, roof:'#9a4a2e',wall:'#b7795a', gen:genHouse},  // NO sobrado
+    {type:'house',tx:10,ty:5, fw:5,fh:2, model:'geminada', antenna:true,           roof:'#5a6a3a',wall:'#c3a37a', gen:genHouse},  // NO casa (sua casa)
     // COMÉRCIO (abre na calçada, toldo) — padaria (NE), bar (SO), farmácia (beira da praça)
-    {type:'house',tx:23,ty:9, fw:5,fh:2, model:'artdeco', sign:'PADARIA', signCol:'#2e5fa3', toldo:true, lit:true, gen:genHouse},
-    {type:'house',tx:13,ty:19,fw:4,fh:2, model:'artdeco', bar:true, toldo:true, lit:true, gen:genHouse},
-    {type:'house',tx:35,ty:21,fw:3,fh:2, model:'geminada', sign:'FARMÁCIA', signCol:'#2e7d4f', toldo:true, gen:genHouse},
+    {type:'house',tx:23,ty:9, fw:5,fh:2, model:'artdeco', sign:'PADARIA', signCol:'#2e5fa3', toldo:true, lit:true, roof:'#7a5230',wall:'#b78a5a', gen:genHouse},
+    {type:'house',tx:13,ty:19,fw:4,fh:2, model:'artdeco', bar:true, toldo:true, lit:true, roof:'#8a5a2e',wall:'#b78a4a', gen:genHouse},
+    {type:'house',tx:35,ty:21,fw:3,fh:2, model:'geminada', sign:'FARMÁCIA', signCol:'#2e7d4f', toldo:true, roof:'#8a4a3a',wall:'#c0a070', gen:genHouse},
     // ESCOLA (NE) — prédio institucional (imagem) + pátio + muro baixo + mastro
     {type:'escola',tx:30,ty:5, fw:6,fh:2, gen:()=>{}},
     // IGREJA barroca (SE) — imagem
