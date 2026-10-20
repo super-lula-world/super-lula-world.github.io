@@ -3,7 +3,7 @@
   "short_name": "Lula World",
   "description": "Jogo de plataforma didático sobre as conquistas do Brasil.",
   "lang": "pt-BR",
-  "start_url": "./",
+  "start_url": "jogar.html",
   "scope": "./",
   "display": "fullscreen",
   "display_override": ["fullscreen", "standalone"],

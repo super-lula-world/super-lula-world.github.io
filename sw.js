@@ -1,11 +1,12 @@
 /* Service worker do Super Lula World.
    Estratégia "network-first": online sempre pega a versão mais nova (evita
    ficar preso em cache antigo); offline cai no cache. */
-const CACHE = "slw-v35";
+const CACHE = "slw-v36";
 const ASSETS = [
-  "./", "./index.html",
-  "./css/style.css?v=35", "./js/levels.js?v=35", "./js/game.js?v=35",
-  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"
+  "./", "./index.html", "./jogar.html",
+  "./css/style.css?v=36", "./js/levels.js?v=36", "./js/game.js?v=36",
+  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png",
+  "./img/preview.png", "./img/mapa.png"
 ];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).catch(()=>{}).then(() => self.skipWaiting()));

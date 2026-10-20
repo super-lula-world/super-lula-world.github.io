@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- Rede de segurança: se algo travar o jogo (ex.: navegador antigo da Samsung),
+     mostra uma tela com o erro em vez de ficar preto. Ajuda a diagnosticar. -->
+<script>
+(function(){
+  var shown=false;
+  function esc(s){return String(s).replace(/[<>&]/g,function(c){return c=='<'?'&lt;':c=='>'?'&gt;':'&amp;';});}
+  window.__fatal=function(msg){
+    if(shown)return; shown=true;
+    function paint(){
+      var d=document.getElementById('fatal-error');
+      if(!d){ d=document.createElement('div'); d.id='fatal-error'; (document.body||document.documentElement).appendChild(d); }
+      d.setAttribute('style','position:fixed;inset:0;z-index:99999;background:#0d0f14;color:#fff;'
+        +'font-family:system-ui,Arial,sans-serif;padding:20px;overflow:auto;-webkit-overflow-scrolling:touch;');
+      d.innerHTML='<div style="max-width:540px;margin:8vh auto 0;text-align:center">'
+        +'<div style="font-size:42px">🔧</div>'
+        +'<h2 style="color:#ffd12e;margin:10px 0 6px">Ops! Algo travou o jogo</h2>'
+        +'<p style="color:#cfd3db;line-height:1.5">Tira um <b>print desta tela</b> e manda pra gente — '
+        +'assim corrigimos rapidinho. 🙏</p>'
+        +'<p style="color:#cfd3db;line-height:1.5;margin-top:8px">Enquanto isso, tente abrir pelo '
+        +'<b>Google Chrome</b> atualizado.</p>'
+        +'<pre style="white-space:pre-wrap;text-align:left;background:#1b1e26;color:#ff9a9a;'
+        +'padding:12px;border-radius:10px;margin-top:14px;font-size:12px">'+esc(msg)+'</pre>'
+        +'<p style="color:#7a8a98;font-size:11px;margin-top:10px;word-break:break-word">'+esc(navigator.userAgent)+'</p>'
+        +'</div>';
+    }
+    if(document.body)paint(); else document.addEventListener('DOMContentLoaded',paint);
+  };
+  // só erros de JavaScript (sem captura => ignora falha de carregar imagem/script externo)
+  window.addEventListener('error',function(e){
+    if(e && e.message) window.__fatal(e.message+(e.filename?('\n'+e.filename+' : '+e.lineno):''));
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    var r=e&&e.reason; window.__fatal('Promise: '+((r&&r.message)?r.message:r));
+  });
+})();
+</script>
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<title>Super Lula World</title>
+<meta name="description" content="Super Lula World — jogo de plataforma didático e tributo às conquistas do povo brasileiro. Enfrente as forças do atraso e reconstrua o Brasil!">
+<!-- PWA: instalar na tela inicial e abrir em tela cheia -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1b3fae">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lula World">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=36">
+</head>
+<body>
+<div id="game-shell">
+
+  <canvas id="game" width="1280" height="704"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-item"><span class="hud-ico">❤️</span><span id="hud-vidas">3</span></div>
+    <div class="hud-item"><span class="hud-ico">🗳️</span><span id="hud-votos">0</span></div>
+    <div class="hud-item"><span class="hud-ico">⭐</span><span id="hud-feitos">0</span>/<span id="hud-feitos-total">11</span></div>
+    <div class="hud-spacer"></div>
+    <button id="btn-music" class="hud-btn" title="Música">🔊</button>
+    <button id="btn-pause" class="hud-btn" title="Pausar">⏸</button>
+  </div>
+
+  <!-- Barra do chefão -->
+  <div id="boss-bar" class="hidden">
+    <div class="boss-name"><span id="boss-emoji">🍽️</span> <span id="boss-label">A FOME</span></div>
+    <div class="boss-hp"><div id="boss-hp-fill"></div></div>
+  </div>
+
+  <!-- Dica de tutorial flutuante -->
+  <div id="tutorial-hint" class="hidden"></div>
+
+  <!-- Banner de narrativa (blocos ?) -->
+  <div id="fact-banner" class="hidden"></div>
+
+  <!-- Tela de boas-vindas no celular: como jogar em tela cheia (aparece no início) -->
+  <div id="start-help" class="hidden">
+    <div class="sh-card">
+      <div class="sh-ico">📱✨</div>
+      <h2>Baixe o app (grátis!)</h2>
+      <p class="sh-lead">Instale como <b>app</b> — abre em <b>tela cheia</b>, sem a barra do navegador. É só adicionar à tela inicial:</p>
+      <ol class="sh-steps">
+        <li><b>iPhone (Safari):</b> <b>Compartilhar ⬆️</b> → <b>“Adicionar à Tela de Início”</b>.</li>
+        <li><b>Samsung Internet:</b> menu <b>≡</b> → <b>“Adicionar página a”</b> → <b>“Tela inicial”</b>.</li>
+        <li><b>Chrome (Android):</b> menu <b>⋮</b> → <b>“Instalar app”</b>.</li>
+      </ol>
+      <p class="sh-note">Depois abra pelo ícone <b>SUPER LULA WORLD</b> e deite o celular 🔄 · Prefere jogar aqui? É só tocar em <b>Jogar</b>.</p>
+      <button id="btn-starthelp-ok" class="big-btn">Jogar ▶</button>
+    </div>
+  </div>
+
+  <!-- Aviso: gire o celular (só aparece em retrato no celular) -->
+  <div id="rotate-hint">
+    <div class="rot-inner">
+      <div class="rot-ico">📱</div>
+      <p>Gire o celular na horizontal<br>para jogar melhor 🔄</p>
+    </div>
+  </div>
+
+  <!-- Controles touch -->
+  <div id="touch-controls" class="hidden">
+    <div class="touch-left">
+      <button class="tbtn" data-key="left" aria-label="Esquerda">◀</button>
+      <button class="tbtn" data-key="right" aria-label="Direita">▶</button>
+    </div>
+    <div class="touch-right">
+      <button class="tbtn tbtn-jump" data-key="jump" aria-label="Pular">⬆</button>
+    </div>
+  </div>
+
+  <!-- TELA: Menu -->
+  <div id="screen-menu" class="screen">
+    <div class="menu-box">
+      <h1 class="logo">SUPER<br><span class="logo-lula">LULA</span><br>WORLD</h1>
+      <p class="tagline">A jornada para reconstruir o Brasil</p>
+      <button id="btn-start" class="big-btn">▶ COMEÇAR</button>
+      <button id="btn-help" class="ghost-btn">Como jogar</button>
+      <p class="credits">Um tributo didático em forma de joguinho</p>
+    </div>
+  </div>
+
+  <!-- TELA: Introdução (história) -->
+  <div id="screen-intro" class="screen hidden">
+    <div class="intro-box">
+      <div class="intro-art" id="intro-art"></div>
+      <h2 id="intro-titulo">—</h2>
+      <p class="intro-texto" id="intro-texto">—</p>
+      <div class="intro-dots" id="intro-dots"></div>
+      <div class="intro-nav">
+        <button id="btn-intro-skip" class="ghost-btn">Pular introdução</button>
+        <button id="btn-intro-next" class="big-btn inline">Avançar ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA: Seleção de personagem -->
+  <div id="screen-char" class="screen hidden">
+    <div class="menu-box char-box">
+      <h2>Escolha o visual do Lula</h2>
+      <div id="char-list" class="char-list"></div>
+      <p class="char-tip">💪 Junte <b>40 votos</b> e o Lula vira o <b>FORTÃO</b> — forte até o fim da jornada!</p>
+      <button id="btn-char-go" class="big-btn">Ir para o mapa ▶</button>
+    </div>
+  </div>
+
+  <!-- TELA: Ajuda -->
+  <div id="screen-help" class="screen hidden">
+    <div class="menu-box">
+      <h2>Como jogar</h2>
+      <ul class="help-list">
+        <li><b>◀ ▶</b> / <b>A D</b> — andar</li>
+        <li><b>Espaço</b> / <b>W</b> / <b>↑</b> — pular (segure p/ pular mais alto)</li>
+        <li>Pule na <b>cabeça</b> dos políticos do atraso para derrotá-los</li>
+        <li>Bata embaixo dos blocos <b>?</b> para soltar votos</li>
+        <li>🗳️ Pegue <b>votos</b> — com <b>40</b>, o Lula vira o <b>FORTÃO</b> 💪</li>
+        <li>Pule os <b>buracos</b> — não caia!</li>
+        <li>No fim da fase, enfrente o <b>CHEFÃO</b> (a força do atraso)</li>
+        <li>Vença o chefão e <b>aprenda uma conquista</b> ⭐</li>
+      </ul>
+      <button id="btn-help-back" class="big-btn">Voltar</button>
+    </div>
+  </div>
+
+  <!-- TELA: Mapa do Brasil -->
+  <div id="screen-map" class="screen hidden map-screen">
+    <div class="map-top">
+      <h2>Mapa do Brasil</h2>
+      <p id="map-sub">Escolha a próxima fase</p>
+    </div>
+    <!-- os nós são desenhados no canvas; cliques tratados em JS -->
+    <div id="painel-br" class="painel"></div>
+    <div id="map-start-hint" class="map-hint">Toque na fase que está <b>brilhando</b> 👇</div>
+  </div>
+
+  <!-- TELA: Missão da fase -->
+  <div id="screen-missao" class="screen hidden">
+    <div class="menu-box">
+      <div class="missao-badge" id="missao-badge">FASE 1</div>
+      <h2 id="missao-titulo">—</h2>
+      <p class="intro-texto" id="missao-texto">—</p>
+      <div class="missao-chefe">Chefão: <b id="missao-chefe">—</b></div>
+      <button id="btn-missao-go" class="big-btn">Começar fase ▶</button>
+    </div>
+  </div>
+
+  <!-- TELA: Pausa -->
+  <div id="screen-pause" class="screen hidden">
+    <div class="menu-box">
+      <h2>Pausa</h2>
+      <button id="btn-resume" class="big-btn">Continuar ▶</button>
+      <button id="btn-pause-map" class="ghost-btn">Voltar ao mapa</button>
+      <button id="btn-pause-menu" class="ghost-btn">Menu principal</button>
+    </div>
+  </div>
+
+  <!-- TELA: Conquista desbloqueada -->
+  <div id="screen-feito" class="screen hidden">
+    <div class="feito-box">
+      <div class="feito-emoji" id="feito-emoji">🧡</div>
+      <div class="feito-tag">CONQUISTA DESBLOQUEADA!</div>
+      <h2 class="feito-nome" id="feito-nome">—</h2>
+      <p class="feito-texto" id="feito-texto">—</p>
+      <p class="feito-sabia" id="feito-sabia">—</p>
+      <button id="btn-feito-ok" class="big-btn">Continuar ▶</button>
+    </div>
+  </div>
+
+  <!-- TELA: Fase concluída -->
+  <div id="screen-fase" class="screen hidden">
+    <div class="menu-box">
+      <h2 id="fase-titulo">Fase concluída!</h2>
+      <p class="fase-stats" id="fase-stats">—</p>
+      <button id="btn-next" class="big-btn">Ir para o mapa ▶</button>
+    </div>
+  </div>
+
+  <!-- TELA: Game Over -->
+  <div id="screen-gameover" class="screen hidden">
+    <div class="menu-box">
+      <h2>Ih, caiu! 😅</h2>
+      <p class="tagline">Mas a luta continua. Levanta e vamos de novo!</p>
+      <button id="btn-retry" class="big-btn">Tentar a fase de novo ▶</button>
+      <button id="btn-menu" class="ghost-btn">Menu</button>
+    </div>
+  </div>
+
+  <!-- TELA: Vitória -->
+  <div id="screen-win" class="screen hidden">
+    <div class="menu-box win-box">
+      <h1 class="logo win-logo">BRASIL<br>RECONSTRUÍDO! 🎉</h1>
+      <p class="tagline">Você venceu todas as forças do atraso<br>e devolveu os direitos ao povo!</p>
+      <div id="win-feitos" class="win-feitos"></div>
+      <p class="fase-stats" id="win-stats">—</p>
+      <button id="btn-win-again" class="big-btn">Jogar de novo ▶</button>
+      <button id="btn-win-menu" class="ghost-btn">Menu</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/levels.js?v=36"></script>
+<script src="js/game.js?v=36"></script>
+<script>
+  // registra o app (PWA) — permite "Adicionar à Tela de Início" e tela cheia
+  if ("serviceWorker" in navigator) {
+    addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+  }
+</script>
+<!-- Contador de visitas (GoatCounter) — privado, sem cookies. Painel: https://jgsdctvs.goatcounter.com -->
+<script data-goatcounter="https://jgsdctvs.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
